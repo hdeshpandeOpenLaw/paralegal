@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Header from "@/components/Header";
-import SearchBar from "@/components/SearchBar";
+import SearchBar from "@/components/SearchBar.jsx";
 import UpcomingEvents from "@/components/UpcomingEvents";
 import ImportantInsights from "@/components/DocketUpdates";
 import HowItWorks from "@/components/HowItWorks";
