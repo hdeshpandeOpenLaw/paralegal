@@ -81,7 +81,7 @@ const Header = ({ activeTab = 'ai-assistant', onTabChange }: HeaderProps) => {
             onClick={() => signIn('google')}
             className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-full"
           >
-            Sign in with Google
+            Sign in
           </button>
         )}
       </div>

@@ -19,8 +19,8 @@ export async function GET() {
     // 1. Get the list of message IDs for the first 5 unread emails
     const listResponse = await gmail.users.messages.list({
       userId: 'me',
-      q: 'is:unread',
-      maxResults: 5,
+      q: 'category:primary',
+      maxResults: 10, // Fetching more to ensure we get a good mix of recent emails
     });
 
     const messages = listResponse.data.messages;
