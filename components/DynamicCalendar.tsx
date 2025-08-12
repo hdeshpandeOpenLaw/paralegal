@@ -84,11 +84,16 @@ const DynamicCalendar = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEventType | null>(null);
+  const [currentMonday, setCurrentMonday] = useState(getMonday(new Date()));
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   useEffect(() => {
     if (session) {
       setLoading(true);
-      fetch('/api/calendar')
+      const startDate = toISODateString(currentMonday);
+      const endDate = toISODateString(new Date(currentMonday.getTime() + 6 * 24 * 60 * 60 * 1000));
+      
+      fetch(`/api/calendar?startDate=${startDate}&endDate=${endDate}`)
         .then((res) => {
           if (!res.ok) {
             throw new Error("Failed to fetch events");
@@ -104,10 +109,7 @@ const DynamicCalendar = () => {
           setLoading(false);
         });
     }
-  }, [session]);
-
-  const [currentMonday, setCurrentMonday] = useState(getMonday(new Date()));
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  }, [session, currentMonday]);
 
   const weekDates = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date(currentMonday);
@@ -123,21 +125,17 @@ const DynamicCalendar = () => {
   });
 
   const goPrevWeek = () => {
-    setCurrentMonday(prev => {
-      const d = new Date(prev);
-      d.setDate(prev.getDate() - 7);
-      return d;
-    });
-    setSelectedDate(null as any);
+    const newMonday = new Date(currentMonday);
+    newMonday.setDate(currentMonday.getDate() - 7);
+    setCurrentMonday(newMonday);
+    setSelectedDate(newMonday);
   };
 
   const goNextWeek = () => {
-    setCurrentMonday(prev => {
-      const d = new Date(prev);
-      d.setDate(prev.getDate() + 7);
-      return d;
-    });
-    setSelectedDate(null as any);
+    const newMonday = new Date(currentMonday);
+    newMonday.setDate(currentMonday.getDate() + 7);
+    setCurrentMonday(newMonday);
+    setSelectedDate(newMonday);
   };
 
   const selectedISO = selectedDate ? toISODateString(selectedDate) : null;

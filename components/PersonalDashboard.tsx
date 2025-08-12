@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import Header from './Header';
 import DynamicCalendar from './DynamicCalendar';
-
+import ChatModal from './ChatModal';
 
 interface PersonalDashboardProps {
   onTabChange?: (tab: 'ai-assistant' | 'personal-dashboard') => void;
@@ -446,6 +446,8 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
   const [emails, setEmails] = useState<Email[]>([]);
   const [loadingEmails, setLoadingEmails] = useState(true);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const emailsPerPage = 5;
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -517,6 +519,13 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
     setSelectedEmail(null);
   };
 
+  const indexOfLastEmail = currentPage * emailsPerPage;
+  const indexOfFirstEmail = indexOfLastEmail - emailsPerPage;
+  const currentEmails = emails.slice(indexOfFirstEmail, indexOfLastEmail);
+  const totalPages = Math.ceil(emails.length / emailsPerPage);
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Header activeTab="personal-dashboard" onTabChange={onTabChange} />
@@ -529,7 +538,7 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <KPICard title="Unopened Matters" value="8" color="blue" />
+          <KPICard title="Unopened Matters" value={emails.filter(e => e.isUnread).length.toString()} color="blue" />
           <KPICard title="Matters with pending balance" value="2" color="orange" />
           <KPICard title="Clients due for followup" value="4" color="green" />
           <KPICard title="Matters that need replenishing" value="25" color="red" />
@@ -571,7 +580,7 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
                   {loadingEmails && <p>Loading emails...</p>}
                   {emailError && <p className="text-red-500">{emailError}</p>}
                   {!loadingEmails && !emailError && emails.length === 0 && <p>No unread emails found.</p>}
-                  {!loadingEmails && !emailError && emails.map((email, index) => (
+                  {!loadingEmails && !emailError && currentEmails.map((email, index) => (
                     <EmailItem
                       key={index}
                       email={email}
@@ -580,6 +589,31 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
                       onHide={handleHide}
                     />
                   ))}
+                  {!loadingEmails && !emailError && emails.length > emailsPerPage && (
+                    <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
+                      <span>Showing {indexOfFirstEmail + 1}-{Math.min(indexOfLastEmail, emails.length)} of {emails.length} results</span>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => paginate(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => paginate(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                          className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
