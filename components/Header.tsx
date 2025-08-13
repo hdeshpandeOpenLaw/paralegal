@@ -16,7 +16,8 @@ const Header = ({ activeTab = 'ai-assistant', onTabChange }: HeaderProps) => {
 
   const handleSignOut = () => {
     localStorage.removeItem('clio_access_token');
-    signOut();
+    localStorage.removeItem('clio_refresh_token');
+    signOut({ callbackUrl: '/' });
   };
 
   useEffect(() => {
