@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     const originalMessageIdHeader = originalHeaders?.find(h => h.name === 'Message-ID')?.value;
     const referencesHeader = originalHeaders?.find(h => h.name === 'References')?.value;
 
-    const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=";
+    const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
     const messageParts = [
       `To: ${to}`,
       `Subject: ${utf8Subject}`,

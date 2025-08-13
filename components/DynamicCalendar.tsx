@@ -86,14 +86,40 @@ const DynamicCalendar = () => {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEventType | null>(null);
   const [currentMonday, setCurrentMonday] = useState(getMonday(new Date()));
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [viewedEvents, setViewedEvents] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('viewedEvents');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    }
+    return [];
+  });
 
+  useEffect(() => {
+    localStorage.setItem('viewedEvents', JSON.stringify(viewedEvents));
+  }, [viewedEvents]);
+
+  const handleEventClick = (event: CalendarEventType) => {
+    setSelectedEvent(event);
+    if (!viewedEvents.includes(event.id)) {
+      setViewedEvents([...viewedEvents, event.id]);
+    }
+  };
+  
   useEffect(() => {
     if (session) {
       setLoading(true);
       const startDate = toISODateString(currentMonday);
       const endDate = toISODateString(new Date(currentMonday.getTime() + 6 * 24 * 60 * 60 * 1000));
+      const clioToken = localStorage.getItem('clio_access_token');
       
-      fetch(`/api/calendar?startDate=${startDate}&endDate=${endDate}`)
+      const headers: HeadersInit = {};
+      if (clioToken) {
+        headers['X-Clio-Token'] = clioToken;
+      }
+
+      fetch(`/api/calendar?startDate=${startDate}&endDate=${endDate}`, { headers })
         .then((res) => {
           if (!res.ok) {
             throw new Error("Failed to fetch events");
@@ -208,20 +234,22 @@ const DynamicCalendar = () => {
           <p className="text-red-500">{error}</p>
         ) : eventsForSelectedDate.length > 0 ? (
           eventsForSelectedDate.map((event, idx) => (
-            <div key={idx} onClick={() => setSelectedEvent(event)} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <div key={idx} onClick={() => handleEventClick(event)} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
+              <div className={`w-2 h-2 ${!viewedEvents.includes(event.id) ? 'bg-blue-500' : 'bg-transparent'} rounded-full`}></div>
               <span className="text-xs text-gray-600">{event.time ? new Date(event.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'All day'}</span>
               <span className="text-xs text-gray-800">{event.title}</span>
-              <span className="inline-flex items-center text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-              {event.type === 'Task' ? (
-                <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              ) : (
-                <svg className="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                </svg>
+              {event.type && (
+                <span className="inline-flex items-center text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                  {event.type === 'Task' ? (
+                    <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  ) : (
+                    <svg className="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                  <span className="ml-1.5">{event.type}</span>
+                </span>
               )}
-                <span className="ml-1.5">{event.type}</span>
-              </span>
             </div>
           ))
         ) : (

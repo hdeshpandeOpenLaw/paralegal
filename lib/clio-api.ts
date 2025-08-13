@@ -8,7 +8,10 @@ async function request(endpoint: string, accessToken: string, options: RequestIn
     throw new Error('Access token not found. Please authenticate with Clio.');
   }
 
-  const response = await fetch(`/api/clio`, {
+  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const apiUrl = `${baseUrl}/api/clio`;
+
+  const response = await fetch(apiUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -34,6 +37,11 @@ export async function getMatters(accessToken: string, limit: number = 15, offset
   return request(`matters?limit=${limit}&offset=${offset}&fields=id,display_number,description,last_activity_date`, accessToken);
 }
 
+export async function getMattersTotalCount(accessToken: string) {
+  const result = await request('matters?limit=1&fields=id', accessToken);
+  return result.meta.records;
+}
+
 // Function to get details for a single matter
 export async function getMatterDetails(accessToken:string, matterId: string) {
     const fields = 'id,display_number,description,status,open_date,client{id,name},practice_area{name},responsible_attorney{name},billing_method,created_at,updated_at,maildrop_address';
@@ -43,17 +51,20 @@ export async function getMatterDetails(accessToken:string, matterId: string) {
 // Function to get the count of unread matters
 // Function to get the count of bills awaiting payment
 export async function getBillsAwaitingPaymentCount(accessToken: string) {
-    return request('bills?state=awaiting_payment&limit=1', accessToken);
+    const result = await request('bills?state=awaiting_payment&limit=1&fields=id', accessToken);
+    return result.meta.records;
 }
 
 // Function to get the count of pending matters
 export async function getPendingMattersCount(accessToken: string) {
-    return request('matters?status=Pending&limit=1', accessToken);
+    const result = await request('matters?status=Pending&limit=1&fields=id', accessToken);
+    return result.meta.records;
 }
 
 // Function to get the count of outstanding client balances
 export async function getOutstandingClientBalancesCount(accessToken: string) {
-    return request('bills/outstanding_balances?limit=1', accessToken);
+    const result = await request('bills/outstanding_balances.json?limit=1&fields=id', accessToken);
+    return result.meta.records;
 }
 
 // Function to get activities
@@ -66,15 +77,26 @@ export async function getTasks(accessToken: string, limit: number = 6, offset: n
     return request(`tasks?limit=${limit}&offset=${offset}&fields=id,name,created_at,task_type{name}`, accessToken);
 }
 
+export async function getAllTasks(accessToken: string) {
+  return request(`tasks?fields=id,name,created_at,task_type{name}`, accessToken);
+}
+
 // Function to get the total count of tasks
 export async function getTasksTotalCount(accessToken: string) {
-    return request('tasks?limit=1', accessToken);
+    const result = await request('tasks?limit=1&fields=id', accessToken);
+    return result.meta.records;
 }
 
 // Function to get details for a single task
 export async function getTaskDetails(accessToken: string, taskId: string) {
     const fields = 'id,name,description,due_at,completed_at,status,priority,task_type{name},matter{display_number}';
     return request(`tasks/${taskId}?fields=${fields}`, accessToken);
+}
+
+export async function getClioCalendarEvents(accessToken: string, startDate: string, endDate: string) {
+  const fields = 'id,start_at,end_at,summary,description,location{name},attendees{name},calendar_entry_event_type{name}';
+  const url = `calendar_entries.json?start_date=${startDate}&end_date=${endDate}&fields=${fields}`;
+  return request(url, accessToken);
 }
 
 // Example function to get contacts

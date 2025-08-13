@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import Header from './Header';
 import DynamicCalendar from './DynamicCalendar';
 import ChatModal from './ChatModal';
-import { getMatters, getMatterDetails, getPendingMattersCount, getBillsAwaitingPaymentCount, getOutstandingClientBalancesCount, getTasks, getTaskDetails, getTasksTotalCount } from '../lib/clio-api';
+import { getMatters, getMatterDetails, getMattersTotalCount, getPendingMattersCount, getBillsAwaitingPaymentCount, getOutstandingClientBalancesCount, getTasks, getTaskDetails, getTasksTotalCount, getAllTasks } from '../lib/clio-api';
 import MatterModal from './MatterModal';
 import TaskModal from './TaskModal';
 
@@ -304,12 +304,14 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
   const [clientsDueForFollowupCount, setClientsDueForFollowupCount] = useState(0);
   const [outstandingBalancesCount, setOutstandingBalancesCount] = useState(0);
   const [tasks, setTasks] = useState<any[]>([]);
+  const [allTasks, setAllTasks] = useState<any[]>([]);
   const [selectedMatter, setSelectedMatter] = useState<any>(null);
   const [isMatterModalOpen, setIsMatterModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [mattersCurrentPage, setMattersCurrentPage] = useState(1);
   const mattersPerPage = 15;
+  const [totalMattersCount, setTotalMattersCount] = useState(0);
   const [tasksCurrentPage, setTasksCurrentPage] = useState(1);
   const [totalTasksCount, setTotalTasksCount] = useState(0);
   const tasksPerPage = 6;
@@ -328,9 +330,9 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
     return colors[cat] || 'bg-gray-100 text-gray-700';
   };
 
-  const DonutChart = ({ data }: { data: { name: string, count: number, color: string }[] }) => {
+  const DonutChart = ({ data, total }: { data: { name: string, count: number, color: string }[], total: number }) => {
     const categories = data;
-    const totalTasks = categories.reduce((sum, category) => sum + category.count, 0);
+    const totalTasks = total;
     const circumference = 2 * Math.PI * 14; // 2 * pi * r
 
     const strokeColors: { [key: string]: string } = {
@@ -413,11 +415,13 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
       const token = localStorage.getItem('clio_access_token');
       if (token) {
         fetchClioMatters(token, mattersCurrentPage);
+        fetchMattersTotalCount(token);
         fetchPendingMattersCount(token);
         fetchBillsAwaitingPaymentCount(token);
         fetchClientsDueForFollowup(token);
-        fetchOutstandingBalancesCount(token);
+        // fetchOutstandingBalancesCount(token);
         fetchTasks(token, tasksCurrentPage);
+        fetchAllTasks(token);
         fetchTasksTotalCount(token);
       } else {
         setClioError("Clio access token not found in local storage.");
@@ -458,14 +462,26 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
     }
   };
 
+  const fetchMattersTotalCount = async (token: string) => {
+    try {
+      const count = await getMattersTotalCount(token);
+      if (typeof count === 'number') {
+        setTotalMattersCount(count);
+      } else {
+        console.warn('Received unexpected format for matters total count:', count);
+      }
+    } catch (error: any) {
+      console.error('Could not retrieve matters total count from Clio:', error.message);
+    }
+  };
+
   const fetchPendingMattersCount = async (token: string) => {
     try {
-      const result = await getPendingMattersCount(token);
-      // The count is in the 'meta' part of the response, in the 'total' field
-      if (result && result.meta && typeof result.meta.paging.total === 'number') {
-        setPendingMattersCount(result.meta.paging.total);
+      const count = await getPendingMattersCount(token);
+      if (typeof count === 'number') {
+        setPendingMattersCount(count);
       } else {
-        console.warn('Received unexpected format for pending matters count:', result);
+        console.warn('Received unexpected format for pending matters count:', count);
       }
     } catch (error: any) {
       console.error('Could not retrieve pending matters count from Clio:', error.message);
@@ -474,11 +490,11 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
 
   const fetchBillsAwaitingPaymentCount = async (token: string) => {
     try {
-      const result = await getBillsAwaitingPaymentCount(token);
-      if (result && result.meta && typeof result.meta.paging.total === 'number') {
-        setBillsAwaitingPaymentCount(result.meta.paging.total);
+      const count = await getBillsAwaitingPaymentCount(token);
+      if (typeof count === 'number') {
+        setBillsAwaitingPaymentCount(count);
       } else {
-        console.warn('Received unexpected format for bills awaiting payment count:', result);
+        console.warn('Received unexpected format for bills awaiting payment count:', count);
       }
     } catch (error: any) {
       console.error('Could not retrieve bills awaiting payment count from Clio:', error.message);
@@ -507,11 +523,11 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
 
   const fetchOutstandingBalancesCount = async (token: string) => {
     try {
-      const result = await getOutstandingClientBalancesCount(token);
-      if (result && result.meta && typeof result.meta.paging.total === 'number') {
-        setOutstandingBalancesCount(result.meta.paging.total);
+      const count = await getOutstandingClientBalancesCount(token);
+      if (typeof count === 'number') {
+        setOutstandingBalancesCount(count);
       } else {
-        console.warn('Received unexpected format for outstanding balances count:', result);
+        console.warn('Received unexpected format for outstanding balances count:', count);
       }
     } catch (error: any) {
       console.error('Could not retrieve outstanding balances count from Clio:', error.message);
@@ -532,13 +548,26 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
     }
   };
 
+  const fetchAllTasks = async (token: string) => {
+    try {
+      const result = await getAllTasks(token);
+      if (result && Array.isArray(result.data)) {
+        setAllTasks(result.data);
+      } else {
+        console.warn('Received unexpected format for all tasks:', result);
+      }
+    } catch (error: any) {
+      console.error('Could not retrieve all tasks from Clio:', error.message);
+    }
+  };
+
   const fetchTasksTotalCount = async (token: string) => {
     try {
-      const result = await getTasksTotalCount(token);
-      if (result && result.meta && typeof result.meta.paging.total === 'number') {
-        setTotalTasksCount(result.meta.paging.total);
+      const count = await getTasksTotalCount(token);
+      if (typeof count === 'number') {
+        setTotalTasksCount(count);
       } else {
-        console.warn('Received unexpected format for tasks total count:', result);
+        console.warn('Received unexpected format for tasks total count:', count);
       }
     } catch (error: any) {
       console.error('Could not retrieve tasks total count from Clio:', error.message);
@@ -772,7 +801,7 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
 
               {activeTab === 'tasks' && (
                 <div>
-                  <DonutChart data={processTasksForChart(tasks)} />
+                  <DonutChart data={processTasksForChart(allTasks)} total={totalTasksCount} />
                   
                   <div className="mt-8">
                     <div className="flex items-center justify-between mb-4">
@@ -815,25 +844,31 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
                     </div>
                     
                     <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
-                      <span>Showing {tasks.length} of {totalTasksCount} results</span>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => setTasksCurrentPage(tasksCurrentPage - 1)}
-                          disabled={tasksCurrentPage === 1}
-                          className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Previous
-                        </button>
-                        <span>Page {tasksCurrentPage}</span>
-                        <button
-                          onClick={() => setTasksCurrentPage(tasksCurrentPage + 1)}
-                          disabled={tasks.length < tasksPerPage || tasksCurrentPage * tasksPerPage >= totalTasksCount}
-                          className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Next
-                        </button>
-                      </div>
+                  <span>
+                    Showing {totalTasksCount > 0 ? (tasksCurrentPage - 1) * tasksPerPage + 1 : 0}-
+                    {Math.min(tasksCurrentPage * tasksPerPage, totalTasksCount)} of {totalTasksCount} results
+                  </span>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => setTasksCurrentPage(tasksCurrentPage - 1)}
+                        disabled={tasksCurrentPage === 1}
+                        className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setTasksCurrentPage(tasksCurrentPage + 1)}
+                        disabled={tasksCurrentPage * tasksPerPage >= totalTasksCount}
+                        className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
                     </div>
+                  </div>
                   </div>
                 </div>
               )}
@@ -858,21 +893,27 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
                         ))}
                       </ul>
                       <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
-                        <button
-                          onClick={() => setMattersCurrentPage(mattersCurrentPage - 1)}
-                          disabled={mattersCurrentPage === 1}
-                          className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Previous
-                        </button>
-                        <span>Page {mattersCurrentPage}</span>
-                        <button
-                          onClick={() => setMattersCurrentPage(mattersCurrentPage + 1)}
-                          disabled={clioMatters.length < mattersPerPage}
-                          className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Next
-                        </button>
+                        <span>Showing {totalMattersCount > 0 ? ((mattersCurrentPage - 1) * mattersPerPage) + 1 : 0}-{Math.min(mattersCurrentPage * mattersPerPage, totalMattersCount)} of {totalMattersCount} results</span>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => setMattersCurrentPage(mattersCurrentPage - 1)}
+                            disabled={mattersCurrentPage === 1}
+                            className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => setMattersCurrentPage(mattersCurrentPage + 1)}
+                            disabled={mattersCurrentPage * mattersPerPage >= totalMattersCount}
+                            className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
