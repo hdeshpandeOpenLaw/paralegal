@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import Header from "@/components/Header";
 import SearchBar from "@/components/SearchBar.jsx";
 import UpcomingEvents from "@/components/UpcomingEvents";
@@ -11,7 +12,7 @@ import HowItWorks from "@/components/HowItWorks";
 import PersonalDashboard from "@/components/PersonalDashboard";
 import Login from '@/components/Login';
 
-export default function Home() {
+function HomeContent() {
   const { data: session, status } = useSession();
   const [loginStep, setLoginStep] = useState(1);
   const [isReady, setIsReady] = useState(false);
@@ -51,7 +52,7 @@ export default function Home() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="flex items-center">
-          <img src="/loader.gif" alt="Loading..." className="w-8 h-8 mr-2" />
+          <Image src="/loader.gif" alt="Loading..." width={32} height={32} className="mr-2" unoptimized />
           <span>Loading...</span>
         </div>
       </div>
@@ -87,5 +88,13 @@ export default function Home() {
         <HowItWorks />
       </main>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }

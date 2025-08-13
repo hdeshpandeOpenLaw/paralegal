@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Header from './Header';
@@ -285,7 +286,7 @@ const CalendarEvent = ({ time, title, type, icon }: {
 
 const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
   const { data: session } = useSession();
-  const [activeTab, setActiveTab] = useState<'emails' | 'tasks' | 'clio'>('emails');
+  const [activeTab, setActiveTab] = useState<'emails' | 'tasks' | 'matters'>('emails');
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [greeting, setGreeting] = useState('Morning');
 
@@ -406,7 +407,7 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
   useEffect(() => {
     if (searchParams.get('clioAuth') === 'success') {
       setIsClioConnected(true);
-      setActiveTab('clio');
+      setActiveTab('matters');
     }
   }, [searchParams]);
 
@@ -612,11 +613,11 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
       'Default': 'bg-gray-500',
     };
 
-    const categoryCounts = tasks.reduce((acc, task) => {
+    const categoryCounts = tasks.reduce((acc: { [key: string]: number }, task) => {
       const category = task.task_type?.name || 'No Category';
       acc[category] = (acc[category] || 0) + 1;
       return acc;
-    }, {} as { [key: string]: number });
+    }, {});
 
     return Object.entries(categoryCounts).map(([name, count]) => ({
       name,
@@ -652,7 +653,7 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
 
     if (searchParams.get('clioAuth') === 'success') {
       setIsClioConnected(true);
-      setActiveTab('clio');
+      setActiveTab('matters');
     }
   }, [session, searchParams]);
 
@@ -745,14 +746,14 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
                     Tasks
                   </button>
                   <button
-                    onClick={() => setActiveTab('clio')}
+                    onClick={() => setActiveTab('matters')}
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      activeTab === 'clio'
+                      activeTab === 'matters'
                         ? 'bg-white text-blue-600 shadow-sm'
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    Clio
+                    Matters
                   </button>
                 </div>
               </div>
@@ -761,7 +762,7 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
                 <div>
                   {loadingEmails && (
                     <div className="flex items-center justify-center p-8">
-                      <img src="/loader.gif" alt="Loading..." className="w-6 h-6 mr-2" />
+                      <Image src="/loader.gif" alt="Loading..." width={24} height={24} className="mr-2" unoptimized />
                       <span>Loading emails...</span>
                     </div>
                   )}
@@ -878,7 +879,7 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
                 </div>
               )}
 
-              {activeTab === 'clio' && (
+              {activeTab === 'matters' && (
                 <div>
                   {!isClioConnected && (
                     <button onClick={handleConnectClio} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
@@ -887,14 +888,14 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
                   )}
                   {loadingClio && (
                     <div className="flex items-center justify-center p-8">
-                      <img src="/loader.gif" alt="Loading..." className="w-6 h-6 mr-2" />
+                      <Image src="/loader.gif" alt="Loading..." width={24} height={24} className="mr-2" unoptimized />
                       <span>Loading Clio matters...</span>
                     </div>
                   )}
                   {clioError && <p className="mt-4 text-red-500">{clioError}</p>}
                   {clioMatters.length > 0 && (
                     <div className="mt-8">
-                      <h3 className="text-lg font-semibold text-gray-800">Clio Matters</h3>
+                      <h3 className="text-lg font-semibold text-gray-800">Matters</h3>
                       <ul>
                         {clioMatters.map((matter) => (
                           <li key={matter.id} className="mt-2 p-2 border rounded-md cursor-pointer hover:bg-gray-100" onClick={() => handleMatterClick(matter.id)}>

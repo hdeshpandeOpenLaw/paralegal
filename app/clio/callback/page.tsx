@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import SuccessModal from '../../../components/SuccessModal';
 
-const ClioCallback = () => {
+const ClioCallbackContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const code = searchParams.get('code');
@@ -61,5 +61,11 @@ const ClioCallback = () => {
     </div>
   );
 };
+
+const ClioCallback = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <ClioCallbackContent />
+  </Suspense>
+);
 
 export default ClioCallback;

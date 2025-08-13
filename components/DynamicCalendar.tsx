@@ -231,7 +231,7 @@ const DynamicCalendar = () => {
       <div className="space-y-3 min-h-[100px]">
         {loading ? (
           <div className="flex items-center justify-center">
-            <Image src="/loader.gif" alt="Loading..." width={20} height={20} className="mr-2" />
+            <Image src="/loader.gif" alt="Loading..." width={20} height={20} className="mr-2" unoptimized />
             <span>Loading events...</span>
           </div>
         ) : error ? (

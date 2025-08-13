@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 
-const ChatModal = ({ query, onClose }) => {
+interface ChatModalProps {
+  query: string;
+  onClose: () => void;
+}
+
+const ChatModal = ({ query, onClose }: ChatModalProps) => {
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(true);
 

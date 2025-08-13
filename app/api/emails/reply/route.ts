@@ -3,7 +3,7 @@ import {
 } from "next-auth/next";
 import {
   authOptions
-} from "@/app/api/auth/[...nextauth]/route";
+} from "@/lib/auth";
 import {
   NextResponse
 } from "next/server";

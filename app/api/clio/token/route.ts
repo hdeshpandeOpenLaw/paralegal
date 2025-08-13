@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 const CLIO_CLIENT_ID = process.env.NEXT_PUBLIC_CLIO_CLIENT_ID;
 const CLIO_CLIENT_SECRET = process.env.CLIO_CLIENT_SECRET;
 const CLIO_REDIRECT_URI = process.env.NEXT_PUBLIC_CLIO_REDIRECT_URI;
