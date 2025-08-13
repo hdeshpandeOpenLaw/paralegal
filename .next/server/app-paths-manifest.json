@@ -1,7 +1,8 @@
 {
   "/page": "app/page.js",
+  "/clio/callback/page": "app/clio/callback/page.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/api/calendar/route": "app/api/calendar/route.js",
   "/api/emails/route": "app/api/emails/route.js",
-  "/api/chat/route": "app/api/chat/route.js"
+  "/api/calendar/route": "app/api/calendar/route.js",
+  "/api/clio/route": "app/api/clio/route.js"
 }

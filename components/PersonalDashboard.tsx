@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 import Header from './Header';
 import DynamicCalendar from './DynamicCalendar';
 import ChatModal from './ChatModal';
+import { getMatters, getMatterDetails, getPendingMattersCount, getBillsAwaitingPaymentCount, getOutstandingClientBalancesCount } from '../lib/clio-api';
+import MatterModal from './MatterModal';
 
 interface PersonalDashboardProps {
   onTabChange?: (tab: 'ai-assistant' | 'personal-dashboard') => void;
@@ -439,7 +442,7 @@ const TaskItem = ({ name, category, dateCreated }: {
 
 const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
   const { data: session } = useSession();
-  const [activeTab, setActiveTab] = useState<'emails' | 'tasks'>('emails');
+  const [activeTab, setActiveTab] = useState<'emails' | 'tasks' | 'clio'>('emails');
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [greeting, setGreeting] = useState('Morning');
 
@@ -448,6 +451,148 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const emailsPerPage = 5;
+
+  const [clioMatters, setClioMatters] = useState<any[]>([]);
+  const [loadingClio, setLoadingClio] = useState(false);
+  const [clioError, setClioError] = useState<string | null>(null);
+  const [isClioConnected, setIsClioConnected] = useState(false);
+  const [pendingMattersCount, setPendingMattersCount] = useState(0);
+  const [billsAwaitingPaymentCount, setBillsAwaitingPaymentCount] = useState(0);
+  const [clientsDueForFollowupCount, setClientsDueForFollowupCount] = useState(0);
+  const [outstandingBalancesCount, setOutstandingBalancesCount] = useState(0);
+  const [selectedMatter, setSelectedMatter] = useState<any>(null);
+  const [isMatterModalOpen, setIsMatterModalOpen] = useState(false);
+  const [mattersCurrentPage, setMattersCurrentPage] = useState(1);
+  const mattersPerPage = 15;
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('clioAuth') === 'success') {
+      setIsClioConnected(true);
+      setActiveTab('clio');
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (isClioConnected) {
+      const token = localStorage.getItem('clio_access_token');
+      if (token) {
+        fetchClioMatters(token, mattersCurrentPage);
+        fetchPendingMattersCount(token);
+        fetchBillsAwaitingPaymentCount(token);
+        fetchClientsDueForFollowup(token);
+        fetchOutstandingBalancesCount(token);
+      } else {
+        setClioError("Clio access token not found in local storage.");
+      }
+    }
+  }, [isClioConnected, mattersCurrentPage]);
+
+  const handleConnectClio = () => {
+    const clientId = process.env.NEXT_PUBLIC_CLIO_CLIENT_ID;
+    const redirectUri = process.env.NEXT_PUBLIC_CLIO_REDIRECT_URI;
+
+    if (!clientId || !redirectUri) {
+      setClioError("Clio client ID or redirect URI is not configured properly in environment variables.");
+      return;
+    }
+
+    const authUrl = `https://app.clio.com/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}`;
+    window.location.href = authUrl;
+  };
+
+  const fetchClioMatters = async (token: string, page: number = 1) => {
+    setLoadingClio(true);
+    setClioError(null);
+    const offset = (page - 1) * mattersPerPage;
+    try {
+      const matters = await getMatters(token, mattersPerPage, offset);
+      if (matters && Array.isArray(matters.data)) {
+        setClioMatters(matters.data);
+      } else {
+        console.warn('Received unexpected format for Clio matters:', matters);
+        setClioMatters([]);
+        setClioError('Could not retrieve matters from Clio. The data format was unexpected.');
+      }
+    } catch (error: any) {
+      setClioError(error.message);
+    } finally {
+      setLoadingClio(false);
+    }
+  };
+
+  const fetchPendingMattersCount = async (token: string) => {
+    try {
+      const result = await getPendingMattersCount(token);
+      // The count is in the 'meta' part of the response, in the 'total' field
+      if (result && result.meta && typeof result.meta.paging.total === 'number') {
+        setPendingMattersCount(result.meta.paging.total);
+      } else {
+        console.warn('Received unexpected format for pending matters count:', result);
+      }
+    } catch (error: any) {
+      console.error('Could not retrieve pending matters count from Clio:', error.message);
+    }
+  };
+
+  const fetchBillsAwaitingPaymentCount = async (token: string) => {
+    try {
+      const result = await getBillsAwaitingPaymentCount(token);
+      if (result && result.meta && typeof result.meta.paging.total === 'number') {
+        setBillsAwaitingPaymentCount(result.meta.paging.total);
+      } else {
+        console.warn('Received unexpected format for bills awaiting payment count:', result);
+      }
+    } catch (error: any) {
+      console.error('Could not retrieve bills awaiting payment count from Clio:', error.message);
+    }
+  };
+
+  const fetchClientsDueForFollowup = async (token: string) => {
+    try {
+      // This is a simplified approach. A more robust solution would involve
+      // getting all matters and filtering by last_activity_date.
+      // For now, we'll just get the first page of matters and filter those.
+      const matters = await getMatters(token, 100, 0);
+      if (matters && Array.isArray(matters.data)) {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const dueMatters = matters.data.filter((matter: any) => {
+          if (!matter.last_activity_date) return true; // No activity means due for followup
+          return new Date(matter.last_activity_date) < thirtyDaysAgo;
+        });
+        setClientsDueForFollowupCount(dueMatters.length);
+      }
+    } catch (error: any) {
+      console.error('Could not retrieve clients due for followup:', error.message);
+    }
+  };
+
+  const fetchOutstandingBalancesCount = async (token: string) => {
+    try {
+      const result = await getOutstandingClientBalancesCount(token);
+      if (result && result.meta && typeof result.meta.paging.total === 'number') {
+        setOutstandingBalancesCount(result.meta.paging.total);
+      } else {
+        console.warn('Received unexpected format for outstanding balances count:', result);
+      }
+    } catch (error: any) {
+      console.error('Could not retrieve outstanding balances count from Clio:', error.message);
+    }
+  };
+
+  const handleMatterClick = async (matterId: string) => {
+    const token = localStorage.getItem('clio_access_token');
+    if (token) {
+      try {
+        const matterDetails = await getMatterDetails(token, matterId);
+        setSelectedMatter(matterDetails.data);
+        setIsMatterModalOpen(true);
+      } catch (error: any) {
+        setClioError(`Error fetching matter details: ${error.message}`);
+      }
+    }
+  };
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -538,10 +683,10 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <KPICard title="Unopened Matters" value={emails.filter(e => e.isUnread).length.toString()} color="blue" />
-          <KPICard title="Matters with pending balance" value="2" color="orange" />
-          <KPICard title="Clients due for followup" value="4" color="green" />
-          <KPICard title="Matters that need replenishing" value="25" color="red" />
+          <KPICard title="Pending Matters" value={pendingMattersCount.toString()} color="blue" />
+          <KPICard title="Matters with pending balance" value={billsAwaitingPaymentCount.toString()} color="orange" />
+          <KPICard title="Clients due for followup" value={clientsDueForFollowupCount.toString()} color="green" />
+          <KPICard title="Outstanding Balances" value={outstandingBalancesCount.toString()} color="red" />
         </div>
 
         {/* Main Content Grid */}
@@ -571,6 +716,16 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
                     }`}
                   >
                     Tasks
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('clio')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      activeTab === 'clio'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    Clio
                   </button>
                 </div>
               </div>
@@ -670,6 +825,47 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
                   </div>
                 </div>
               )}
+
+              {activeTab === 'clio' && (
+                <div>
+                  {!isClioConnected && (
+                    <button onClick={handleConnectClio} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+                      Connect to Clio
+                    </button>
+                  )}
+                  {loadingClio && <p className="mt-4">Loading Clio matters...</p>}
+                  {clioError && <p className="mt-4 text-red-500">{clioError}</p>}
+                  {clioMatters.length > 0 && (
+                    <div className="mt-8">
+                      <h3 className="text-lg font-semibold text-gray-800">Clio Matters</h3>
+                      <ul>
+                        {clioMatters.map((matter) => (
+                          <li key={matter.id} className="mt-2 p-2 border rounded-md cursor-pointer hover:bg-gray-100" onClick={() => handleMatterClick(matter.id)}>
+                            {matter.display_number} - {matter.description}
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
+                        <button
+                          onClick={() => setMattersCurrentPage(mattersCurrentPage - 1)}
+                          disabled={mattersCurrentPage === 1}
+                          className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Previous
+                        </button>
+                        <span>Page {mattersCurrentPage}</span>
+                        <button
+                          onClick={() => setMattersCurrentPage(mattersCurrentPage + 1)}
+                          disabled={clioMatters.length < mattersPerPage}
+                          className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           {/* Events Calendar */}
@@ -681,6 +877,7 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
         </div>
       </main>
       {selectedEmail && <EmailModal email={selectedEmail} onClose={handleCloseModal} />}
+      <MatterModal isOpen={isMatterModalOpen} onClose={() => setIsMatterModalOpen(false)} matter={selectedMatter} />
     </div>
   );
 };

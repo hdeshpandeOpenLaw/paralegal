@@ -1,4 +1,3 @@
-
 import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 
@@ -23,10 +22,15 @@ export const authOptions = {
       if (account) {
         token.accessToken = account.access_token
       }
+      // This is a placeholder for where you would add the Clio token
+      // after the Clio OAuth flow. You'll need a custom mechanism to trigger
+      // an update to the session.
       return token
     },
     async session({ session, token }) {
       session.accessToken = token.accessToken as string;
+      session.clioAccessToken = token.clioAccessToken as string;
+      session.clioRefreshToken = token.clioRefreshToken as string;
       return session
     },
   },
