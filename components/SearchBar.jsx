@@ -19,17 +19,18 @@ const SearchBar = () => {
     const [showChat, setShowChat] = useState(false);
     const searchContainerRef = useRef(null);
 
+    const handleSearch = (currentQuery) => {
+        if (currentQuery.trim()) {
+            setQuery(currentQuery);
+            setShowChat(true);
+            setShowSuggestions(false);
+        }
+    };
+
     const handleInputChange = (e) => {
         const value = e.target.value;
         setQuery(value);
         setShowSuggestions(value.length > 0);
-    };
-
-    const handleSearch = () => {
-        if (query.trim()) {
-            setShowChat(true);
-            setShowSuggestions(false);
-        }
     };
 
     useEffect(() => {
@@ -54,7 +55,7 @@ const SearchBar = () => {
                     value={query}
                     onChange={handleInputChange}
                     onFocus={() => setShowSuggestions(query.length > 0)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch(query)}
                 />
                 <div className="absolute inset-y-0 left-0 flex items-center pl-5 pointer-events-none">
                     <SparklesIcon className="h-6 w-6 text-blue-500" />
@@ -68,10 +69,7 @@ const SearchBar = () => {
                         <ul className="mt-1">
                             {suggestions.map((suggestion, index) => (
                                 <li key={index} className="flex items-center py-2 px-3 rounded-lg hover:bg-blue-50 cursor-pointer"
-                                    onClick={() => {
-                                        setQuery(suggestion);
-                                        setShowSuggestions(false);
-                                    }}
+                                    onClick={() => handleSearch(suggestion)}
                                 >
                                     <SparklesIcon className="h-5 w-5 text-slate-500" />
                                     <span className="ml-3 text-gray-700">{suggestion}</span>
