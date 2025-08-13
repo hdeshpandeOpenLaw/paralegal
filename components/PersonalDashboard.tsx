@@ -759,7 +759,12 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
 
               {activeTab === 'emails' && (
                 <div>
-                  {loadingEmails && <p>Loading emails...</p>}
+                  {loadingEmails && (
+                    <div className="flex items-center justify-center p-8">
+                      <img src="/loader.gif" alt="Loading..." className="w-6 h-6 mr-2" />
+                      <span>Loading emails...</span>
+                    </div>
+                  )}
                   {emailError && <p className="text-red-500">{emailError}</p>}
                   {!loadingEmails && !emailError && emails.length === 0 && <p>No unread emails found.</p>}
                   {!loadingEmails && !emailError && currentEmails.map((email, index) => (
@@ -880,7 +885,12 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
                       Connect to Clio
                     </button>
                   )}
-                  {loadingClio && <p className="mt-4">Loading Clio matters...</p>}
+                  {loadingClio && (
+                    <div className="flex items-center justify-center p-8">
+                      <img src="/loader.gif" alt="Loading..." className="w-6 h-6 mr-2" />
+                      <span>Loading Clio matters...</span>
+                    </div>
+                  )}
                   {clioError && <p className="mt-4 text-red-500">{clioError}</p>}
                   {clioMatters.length > 0 && (
                     <div className="mt-8">

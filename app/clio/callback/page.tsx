@@ -56,11 +56,10 @@ const ClioCallback = () => {
       <SuccessModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        message="Clio account successfully connected"
+        message="Your Clio account is now securely linked. You're all set!"
       />
     </div>
   );
 };
 
 export default ClioCallback;
-

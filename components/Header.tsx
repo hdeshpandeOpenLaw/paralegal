@@ -14,6 +14,11 @@ const Header = ({ activeTab = 'ai-assistant', onTabChange }: HeaderProps) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const handleSignOut = () => {
+    localStorage.removeItem('clio_access_token');
+    signOut();
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -30,7 +35,7 @@ const Header = ({ activeTab = 'ai-assistant', onTabChange }: HeaderProps) => {
   return (
     <header className="flex justify-between items-center px-8 py-6">
       <div className="flex items-center">
-        <Image src="/ol-logo.svg" alt="OpenLaw Logo" width={150} height={32} priority />
+        <Image src="/ol-logo.svg" alt="OpenLaw Logo" width={180} height={38} priority />
       </div>
       <div className="flex items-center bg-gray-200 rounded-full p-1 shadow-sm">
         <button 
@@ -68,7 +73,7 @@ const Header = ({ activeTab = 'ai-assistant', onTabChange }: HeaderProps) => {
             {showDropdown && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                 <button 
-                  onClick={() => signOut()}
+                  onClick={handleSignOut}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   Sign Out
