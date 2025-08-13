@@ -61,6 +61,22 @@ export async function getActivities(accessToken: string, updatedSince: string) {
     return request(`activities?updated_since=${updatedSince}`, accessToken);
 }
 
+// Function to get tasks
+export async function getTasks(accessToken: string, limit: number = 6, offset: number = 0) {
+    return request(`tasks?limit=${limit}&offset=${offset}&fields=id,name,created_at,task_type{name}`, accessToken);
+}
+
+// Function to get the total count of tasks
+export async function getTasksTotalCount(accessToken: string) {
+    return request('tasks?limit=1', accessToken);
+}
+
+// Function to get details for a single task
+export async function getTaskDetails(accessToken: string, taskId: string) {
+    const fields = 'id,name,description,due_at,completed_at,status,priority,task_type{name},matter{display_number}';
+    return request(`tasks/${taskId}?fields=${fields}`, accessToken);
+}
+
 // Example function to get contacts
 export async function getContacts(accessToken: string) {
   return request('contacts', accessToken);

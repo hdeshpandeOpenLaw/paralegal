@@ -4,8 +4,9 @@ import { useSearchParams } from 'next/navigation';
 import Header from './Header';
 import DynamicCalendar from './DynamicCalendar';
 import ChatModal from './ChatModal';
-import { getMatters, getMatterDetails, getPendingMattersCount, getBillsAwaitingPaymentCount, getOutstandingClientBalancesCount } from '../lib/clio-api';
+import { getMatters, getMatterDetails, getPendingMattersCount, getBillsAwaitingPaymentCount, getOutstandingClientBalancesCount, getTasks, getTaskDetails, getTasksTotalCount } from '../lib/clio-api';
 import MatterModal from './MatterModal';
+import TaskModal from './TaskModal';
 
 interface PersonalDashboardProps {
   onTabChange?: (tab: 'ai-assistant' | 'personal-dashboard') => void;
@@ -282,164 +283,6 @@ const CalendarEvent = ({ time, title, type, icon }: {
   </div>
 );
 
-const DonutChart = () => {
-  const categories = [
-    { name: 'Research', count: 6, color: 'bg-green-500' },
-    { name: 'Calls', count: 16, color: 'bg-teal-500' },
-    { name: 'Drafting', count: 24, color: 'bg-pink-500' },
-    { name: 'Emails', count: 12, color: 'bg-purple-500' },
-    { name: 'Files', count: 5, color: 'bg-orange-500' },
-    { name: 'Meetings', count: 8, color: 'bg-amber-600' },
-    { name: 'Review', count: 11, color: 'bg-red-500' },
-  ];
-
-  return (
-    <div className="flex items-center space-x-8">
-      {/* Donut Chart */}
-      <div className="relative w-32 h-32">
-        <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 32 32">
-          <circle
-            cx="16"
-            cy="16"
-            r="14"
-            fill="none"
-            stroke="#e5e7eb"
-            strokeWidth="4"
-          />
-          {/* Chart segments - simplified representation */}
-          <circle
-            cx="16"
-            cy="16"
-            r="14"
-            fill="none"
-            stroke="#10b981"
-            strokeWidth="4"
-            strokeDasharray="44 100"
-            strokeDashoffset="0"
-          />
-          <circle
-            cx="16"
-            cy="16"
-            r="14"
-            fill="none"
-            stroke="#14b8a6"
-            strokeWidth="4"
-            strokeDasharray="44 100"
-            strokeDashoffset="-44"
-          />
-          <circle
-            cx="16"
-            cy="16"
-            r="14"
-            fill="none"
-            stroke="#ec4899"
-            strokeWidth="4"
-            strokeDasharray="44 100"
-            strokeDashoffset="-88"
-          />
-          <circle
-            cx="16"
-            cy="16"
-            r="14"
-            fill="none"
-            stroke="#8b5cf6"
-            strokeWidth="4"
-            strokeDasharray="44 100"
-            strokeDashoffset="-132"
-          />
-          <circle
-            cx="16"
-            cy="16"
-            r="14"
-            fill="none"
-            stroke="#f97316"
-            strokeWidth="4"
-            strokeDasharray="44 100"
-            strokeDashoffset="-176"
-          />
-          <circle
-            cx="16"
-            cy="16"
-            r="14"
-            fill="none"
-            stroke="#d97706"
-            strokeWidth="4"
-            strokeDasharray="44 100"
-            strokeDashoffset="-220"
-          />
-          <circle
-            cx="16"
-            cy="16"
-            r="14"
-            fill="none"
-            stroke="#ef4444"
-            strokeWidth="4"
-            strokeDasharray="44 100"
-            strokeDashoffset="-264"
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-800">82</div>
-            <div className="text-xs text-gray-500">Total Tasks</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="space-y-2">
-        {categories.map((category, index) => (
-          <div key={category.name} className="flex items-center space-x-3">
-            <div className={`w-3 h-3 rounded-full ${category.color}`}></div>
-            <span className="text-sm text-gray-700">{category.name}</span>
-            <span className="text-sm font-medium text-gray-900">{category.count}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const TaskItem = ({ name, category, dateCreated }: { 
-  name: string, 
-  category: string, 
-  dateCreated: string 
-}) => {
-  const getCategoryColor = (cat: string) => {
-    const colors: { [key: string]: string } = {
-      'Research': 'bg-green-100 text-green-700',
-      'Calls': 'bg-teal-100 text-teal-700',
-      'Drafting': 'bg-blue-100 text-blue-700',
-      'Emails': 'bg-pink-100 text-pink-700',
-      'Files': 'bg-purple-100 text-purple-700',
-      'Meetings': 'bg-amber-100 text-amber-700',
-      'Review': 'bg-red-100 text-red-700',
-    };
-    return colors[cat] || 'bg-gray-100 text-gray-700';
-  };
-
-  return (
-    <tr className="border-b border-gray-100">
-      <td className="py-3 px-4">
-        <div className="font-medium text-gray-900">{name}</div>
-      </td>
-      <td className="py-3 px-4">
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(category)}`}>
-          {category}
-        </span>
-      </td>
-      <td className="py-3 px-4 text-sm text-gray-600">{dateCreated}</td>
-      <td className="py-3 px-4">
-        <button className="text-gray-400 hover:text-gray-600">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-          </svg>
-        </button>
-      </td>
-    </tr>
-  );
-};
-
 const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
   const { data: session } = useSession();
   const [activeTab, setActiveTab] = useState<'emails' | 'tasks' | 'clio'>('emails');
@@ -460,11 +303,103 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
   const [billsAwaitingPaymentCount, setBillsAwaitingPaymentCount] = useState(0);
   const [clientsDueForFollowupCount, setClientsDueForFollowupCount] = useState(0);
   const [outstandingBalancesCount, setOutstandingBalancesCount] = useState(0);
+  const [tasks, setTasks] = useState<any[]>([]);
   const [selectedMatter, setSelectedMatter] = useState<any>(null);
   const [isMatterModalOpen, setIsMatterModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [mattersCurrentPage, setMattersCurrentPage] = useState(1);
   const mattersPerPage = 15;
+  const [tasksCurrentPage, setTasksCurrentPage] = useState(1);
+  const [totalTasksCount, setTotalTasksCount] = useState(0);
+  const tasksPerPage = 6;
   const searchParams = useSearchParams();
+
+  const getCategoryColor = (cat: string) => {
+    const colors: { [key: string]: string } = {
+      'Research': 'bg-green-100 text-green-700',
+      'Calls': 'bg-teal-100 text-teal-700',
+      'Drafting': 'bg-blue-100 text-blue-700',
+      'Emails': 'bg-pink-100 text-pink-700',
+      'Files': 'bg-purple-100 text-purple-700',
+      'Meetings': 'bg-amber-100 text-amber-700',
+      'Review': 'bg-red-100 text-red-700',
+    };
+    return colors[cat] || 'bg-gray-100 text-gray-700';
+  };
+
+  const DonutChart = ({ data }: { data: { name: string, count: number, color: string }[] }) => {
+    const categories = data;
+    const totalTasks = categories.reduce((sum, category) => sum + category.count, 0);
+    const circumference = 2 * Math.PI * 14; // 2 * pi * r
+
+    const strokeColors: { [key: string]: string } = {
+      'bg-green-500': '#22c55e',
+      'bg-teal-500': '#14b8a6',
+      'bg-blue-500': '#3b82f6',
+      'bg-pink-500': '#ec4899',
+      'bg-purple-500': '#a855f7',
+      'bg-amber-600': '#d97706',
+      'bg-red-500': '#ef4444',
+      'bg-gray-500': '#6b7280',
+    };
+  
+    let offset = 0;
+  
+    return (
+      <div className="flex items-center space-x-8">
+        {/* Donut Chart */}
+        <div className="relative w-32 h-32">
+          <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 32 32">
+            <circle
+              cx="16"
+              cy="16"
+              r="14"
+              fill="none"
+              stroke="#e5e7eb"
+              strokeWidth="4"
+            />
+            {categories.map((category, index) => {
+              const percentage = totalTasks > 0 ? (category.count / totalTasks) * 100 : 0;
+              const strokeDasharray = `${(percentage * circumference) / 100} ${circumference}`;
+              const strokeDashoffset = -offset;
+              offset += (percentage * circumference) / 100;
+              return (
+                <circle
+                  key={index}
+                  cx="16"
+                  cy="16"
+                  r="14"
+                  fill="none"
+                  stroke={strokeColors[category.color] || '#6b7280'}
+                  strokeWidth="4"
+                  strokeDasharray={strokeDasharray}
+                  strokeDashoffset={strokeDashoffset}
+                />
+              );
+            })}
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-800">{totalTasks}</div>
+              <div className="text-xs text-gray-500">Total Tasks</div>
+            </div>
+          </div>
+        </div>
+  
+        {/* Legend */}
+        <div className="space-y-2">
+          {categories.map((category, index) => (
+            <div key={category.name} className="flex items-center space-x-3">
+              <div className={`w-3 h-3 rounded-full ${category.color}`}></div>
+              <span className="text-sm text-gray-700">{category.name}</span>
+              <span className="text-sm font-medium text-gray-900">{category.count}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   useEffect(() => {
     if (searchParams.get('clioAuth') === 'success') {
@@ -482,11 +417,13 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
         fetchBillsAwaitingPaymentCount(token);
         fetchClientsDueForFollowup(token);
         fetchOutstandingBalancesCount(token);
+        fetchTasks(token, tasksCurrentPage);
+        fetchTasksTotalCount(token);
       } else {
         setClioError("Clio access token not found in local storage.");
       }
     }
-  }, [isClioConnected, mattersCurrentPage]);
+  }, [isClioConnected, mattersCurrentPage, tasksCurrentPage]);
 
   const handleConnectClio = () => {
     const clientId = process.env.NEXT_PUBLIC_CLIO_CLIENT_ID;
@@ -581,6 +518,46 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
     }
   };
 
+  const fetchTasks = async (token: string, page: number = 1) => {
+    const offset = (page - 1) * tasksPerPage;
+    try {
+      const result = await getTasks(token, tasksPerPage, offset);
+      if (result && Array.isArray(result.data)) {
+        setTasks(result.data);
+      } else {
+        console.warn('Received unexpected format for tasks:', result);
+      }
+    } catch (error: any) {
+      console.error('Could not retrieve tasks from Clio:', error.message);
+    }
+  };
+
+  const fetchTasksTotalCount = async (token: string) => {
+    try {
+      const result = await getTasksTotalCount(token);
+      if (result && result.meta && typeof result.meta.paging.total === 'number') {
+        setTotalTasksCount(result.meta.paging.total);
+      } else {
+        console.warn('Received unexpected format for tasks total count:', result);
+      }
+    } catch (error: any) {
+      console.error('Could not retrieve tasks total count from Clio:', error.message);
+    }
+  };
+
+  const handleTaskClick = async (taskId: string) => {
+    const token = localStorage.getItem('clio_access_token');
+    if (token) {
+      try {
+        const taskDetails = await getTaskDetails(token, taskId);
+        setSelectedTask(taskDetails.data);
+        setIsTaskModalOpen(true);
+      } catch (error: any) {
+        setClioError(`Error fetching task details: ${error.message}`);
+      }
+    }
+  };
+
   const handleMatterClick = async (matterId: string) => {
     const token = localStorage.getItem('clio_access_token');
     if (token) {
@@ -592,6 +569,31 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
         setClioError(`Error fetching matter details: ${error.message}`);
       }
     }
+  };
+
+  const processTasksForChart = (tasks: any[]) => {
+    const categoryColors: { [key: string]: string } = {
+      'Research': 'bg-green-500',
+      'Calls': 'bg-teal-500',
+      'Drafting': 'bg-blue-500',
+      'Emails': 'bg-pink-500',
+      'Files': 'bg-purple-500',
+      'Meetings': 'bg-amber-600',
+      'Review': 'bg-red-500',
+      'Default': 'bg-gray-500',
+    };
+
+    const categoryCounts = tasks.reduce((acc, task) => {
+      const category = task.task_type?.name || 'No Category';
+      acc[category] = (acc[category] || 0) + 1;
+      return acc;
+    }, {} as { [key: string]: number });
+
+    return Object.entries(categoryCounts).map(([name, count]) => ({
+      name,
+      count,
+      color: categoryColors[name] || categoryColors['Default'],
+    }));
   };
 
   useEffect(() => {
@@ -618,16 +620,12 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
           setLoadingEmails(false);
         });
     }
-  }, [session]);
 
-  const tasks = [
-    { name: 'Special Sets', category: 'Research', dateCreated: '26 Jun, 2022' },
-    { name: 'Order Of Dismissal', category: 'Drafting', dateCreated: '24 Jun, 2022' },
-    { name: 'Client Call - Smith Case', category: 'Calls', dateCreated: '22 Jun, 2022' },
-    { name: 'Notice Of Cancellation Of Hearing', category: 'Drafting', dateCreated: '21 Jun, 2022' },
-    { name: 'Email Response - Contract Review', category: 'Emails', dateCreated: '21 Jun, 2022' },
-    { name: 'Defendants Certificate Of Settlement Authori...', category: 'Files', dateCreated: '21 Jun, 2022' },
-  ];
+    if (searchParams.get('clioAuth') === 'success') {
+      setIsClioConnected(true);
+      setActiveTab('clio');
+    }
+  }, [session, searchParams]);
 
   const handleMarkUnread = async (emailId: string) => {
     // Optimistically update the UI
@@ -774,7 +772,7 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
 
               {activeTab === 'tasks' && (
                 <div>
-                  <DonutChart />
+                  <DonutChart data={processTasksForChart(tasks)} />
                   
                   <div className="mt-8">
                     <div className="flex items-center justify-between mb-4">
@@ -793,32 +791,46 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
                         </thead>
                         <tbody>
                           {tasks.map((task, index) => (
-                            <TaskItem
-                              key={index}
-                              name={task.name}
-                              category={task.category}
-                              dateCreated={task.dateCreated}
-                            />
+                            <tr key={index} className="border-b border-gray-100 cursor-pointer hover:bg-gray-50" onClick={() => handleTaskClick(task.id)}>
+                              <td className="py-3 px-4">
+                                <div className="font-medium text-gray-900">{task.name}</div>
+                              </td>
+                              <td className="py-3 px-4">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(task.task_type?.name || 'No Category')}`}>
+                                  {task.task_type?.name || 'No Category'}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 text-sm text-gray-600">{new Date(task.created_at).toLocaleDateString()}</td>
+                              <td className="py-3 px-4">
+                                <button className="text-gray-400 hover:text-gray-600">
+                                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                  </svg>
+                                </button>
+                              </td>
+                            </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
                     
                     <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
-                      <span>Showing 6 of 15 results</span>
+                      <span>Showing {tasks.length} of {totalTasksCount} results</span>
                       <div className="flex items-center space-x-2">
-                        <button className="p-1 hover:bg-gray-100 rounded">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                          </svg>
+                        <button
+                          onClick={() => setTasksCurrentPage(tasksCurrentPage - 1)}
+                          disabled={tasksCurrentPage === 1}
+                          className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Previous
                         </button>
-                        <button className="px-2 py-1 bg-blue-600 text-white rounded text-xs">1</button>
-                        <button className="px-2 py-1 hover:bg-gray-100 rounded text-xs">2</button>
-                        <button className="px-2 py-1 hover:bg-gray-100 rounded text-xs">3</button>
-                        <button className="p-1 hover:bg-gray-100 rounded">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
+                        <span>Page {tasksCurrentPage}</span>
+                        <button
+                          onClick={() => setTasksCurrentPage(tasksCurrentPage + 1)}
+                          disabled={tasks.length < tasksPerPage || tasksCurrentPage * tasksPerPage >= totalTasksCount}
+                          className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Next
                         </button>
                       </div>
                     </div>
@@ -878,6 +890,7 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
       </main>
       {selectedEmail && <EmailModal email={selectedEmail} onClose={handleCloseModal} />}
       <MatterModal isOpen={isMatterModalOpen} onClose={() => setIsMatterModalOpen(false)} matter={selectedMatter} />
+      <TaskModal isOpen={isTaskModalOpen} onClose={() => setIsTaskModalOpen(false)} task={selectedTask} />
     </div>
   );
 };
