@@ -19,8 +19,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // 3. Get the query from the request
-  const { query } = await req.json();
+  // 3. Get the query and history from the request
+  const { query, history } = await req.json();
   if (!query) {
     return NextResponse.json({ error: "Query is required" }, { status: 400 });
   }
@@ -38,9 +38,15 @@ export async function POST(req: NextRequest) {
 
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
+    const historyText = history?.map((m: any) => `${m.sender}: ${m.text}`).join('\n') || '';
+
     const prompt = `
       You are a paralegal and lawyer's personal assistant, also helping user with legal questions. Based on the following data, please answer the user's question.
       Use's name is: "${session?.user?.name?.split(' ')[0]}"
+      
+      Chat History:
+      ${historyText}
+
       User's Question: "${query}"
 
       Today's Date: ${new Date().toDateString()}

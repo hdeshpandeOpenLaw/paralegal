@@ -6,8 +6,8 @@ import AuthProvider from "@/components/AuthProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Legal AI Assistant",
-  description: "Get instant help with your legal questions",
+  title: "",
+  description: "",
   icons: {
     icon: '/favicon.png',
   },

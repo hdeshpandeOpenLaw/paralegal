@@ -1,17 +1,10 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/api/auth/session/update/route": "app/api/auth/session/update/route.js",
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/api/chat/route": "app/api/chat/route.js",
-  "/api/clio/route": "app/api/clio/route.js",
-  "/api/calendar/route": "app/api/calendar/route.js",
-  "/api/emails/archive/route": "app/api/emails/archive/route.js",
-  "/api/emails/forward/route": "app/api/emails/forward/route.js",
-  "/api/emails/route": "app/api/emails/route.js",
-  "/api/emails/read/route": "app/api/emails/read/route.js",
-  "/api/emails/unread/route": "app/api/emails/unread/route.js",
-  "/api/emails/reply/route": "app/api/emails/reply/route.js",
-  "/clio/callback/page": "app/clio/callback/page.js",
   "/page": "app/page.js",
-  "/api/clio/token/route": "app/api/clio/token/route.js"
+  "/clio/callback/page": "app/clio/callback/page.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/api/clio/token/route": "app/api/clio/token/route.js",
+  "/api/calendar/route": "app/api/calendar/route.js",
+  "/api/emails/route": "app/api/emails/route.js",
+  "/api/clio/route": "app/api/clio/route.js",
+  "/api/chat/route": "app/api/chat/route.js"
 }

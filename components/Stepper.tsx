@@ -7,19 +7,19 @@ interface StepperProps {
 const Stepper: React.FC<StepperProps> = ({ currentStep }) => {
   const steps = [
     { number: 1, title: 'Google Sign-in' },
-    { number: 2, title: 'Clio Sign-in' },
-    { number: 3, title: 'Enter App' },
+    { number: 2, title: 'Connect Clio' },
+    { number: 3, title: 'Dashboard' },
   ];
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 sm:px-0">
-      <div className="relative flex items-center">
+      <div className="relative flex items-center justify-between">
         {/* Connecting line */}
-        <div className="absolute w-full h-0.5 bg-gray-300 top-4 left-0" />
+        <div className="absolute w-[calc(100%-4rem)] h-0.5 bg-gray-300 top-4 left-8" />
         <div
-          className="absolute h-0.5 bg-blue-600 top-4 left-0 transition-all duration-500 ease-in-out"
+          className="absolute h-0.5 bg-blue-600 top-4 left-8 transition-all duration-500 ease-in-out"
           style={{
-            width: `${((currentStep - 1) / (steps.length - 1)) * 100}%`,
+            width: `calc(${((currentStep - 1) / (steps.length - 1)) * 100}% - 4rem)`,
           }}
         />
 
@@ -31,9 +31,6 @@ const Stepper: React.FC<StepperProps> = ({ currentStep }) => {
             <div
               key={step.number}
               className="relative flex flex-col items-center"
-              style={{
-                width: `${100 / (steps.length - 1)}%`,
-              }}
             >
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold z-10 transition-colors duration-500 ease-in-out ${

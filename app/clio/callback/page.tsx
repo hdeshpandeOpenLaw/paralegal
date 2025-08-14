@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import SuccessModal from '../../../components/SuccessModal';
 
 const ClioCallbackContent = () => {
   const searchParams = useSearchParams();
@@ -10,7 +9,6 @@ const ClioCallbackContent = () => {
   const code = searchParams.get('code');
   
   const [message, setMessage] = useState('Authenticating with Clio...');
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // useRef to prevent firing the fetch request twice in development (due to React Strict Mode)
@@ -32,7 +30,7 @@ const ClioCallbackContent = () => {
           localStorage.setItem('clio_access_token', data.access_token);
           localStorage.setItem('clio_refresh_token', data.refresh_token);
           setMessage('Clio authentication successful!');
-          setIsModalOpen(true);
+          router.push('/?clioAuth=success');
         })
         .catch((error) => {
           console.error('Clio authentication error:', error);
@@ -40,12 +38,7 @@ const ClioCallbackContent = () => {
           setMessage(`Clio authentication failed: ${error.message}`);
         });
     }
-  }, [code]);
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    router.push('/?clioAuth=success');
-  };
+  }, [code, router]);
 
   return (
     <div className="flex items-center justify-center h-screen">
@@ -53,11 +46,6 @@ const ClioCallbackContent = () => {
         <p className="text-lg">{message}</p>
         {error && <p className="text-red-500 mt-2">Please try connecting to Clio again from the dashboard.</p>}
       </div>
-      <SuccessModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        message="Your Clio account is now securely linked. You're all set!"
-      />
     </div>
   );
 };

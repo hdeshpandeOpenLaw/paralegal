@@ -9,7 +9,7 @@ interface HeaderProps {
   onTabChange?: (tab: 'ai-assistant' | 'personal-dashboard') => void;
 }
 
-const Header = ({ activeTab = 'ai-assistant', onTabChange }: HeaderProps) => {
+const Header = ({ activeTab = 'personal-dashboard', onTabChange }: HeaderProps) => {
   const { data: session } = useSession();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -40,16 +40,6 @@ const Header = ({ activeTab = 'ai-assistant', onTabChange }: HeaderProps) => {
       </div>
       <div className="flex items-center bg-gray-200 rounded-full p-1 shadow-sm">
         <button 
-          onClick={() => onTabChange?.('ai-assistant')}
-          className={`py-2.5 px-6 rounded-full font-medium text-sm transition-all duration-200 ${
-            activeTab === 'ai-assistant'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          AI Assistant
-        </button>
-        <button 
           onClick={() => onTabChange?.('personal-dashboard')}
           className={`py-2.5 px-6 rounded-full font-medium text-sm transition-all duration-200 ${
             activeTab === 'personal-dashboard'
@@ -58,6 +48,16 @@ const Header = ({ activeTab = 'ai-assistant', onTabChange }: HeaderProps) => {
           }`}
         >
           Personal Dashboard
+        </button>
+        <button 
+          onClick={() => onTabChange?.('ai-assistant')}
+          className={`py-2.5 px-6 rounded-full font-medium text-sm transition-all duration-200 ${
+            activeTab === 'ai-assistant'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          Firm Dashboard
         </button>
       </div>
       <div className="flex items-center">

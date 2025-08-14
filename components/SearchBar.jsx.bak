@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import ChatHistory, { Message } from './ChatHistory';
+import ChatHistory from './ChatHistory';
 import SparklesIcon from './SparklesIcon';
 
 const suggestions = [
@@ -11,17 +11,16 @@ const suggestions = [
 const SearchBar = () => {
     const [query, setQuery] = useState('');
     const [showSuggestions, setShowSuggestions] = useState(false);
-    const [chatHistory, setChatHistory] = useState<Message[]>([]);
-    const searchContainerRef = useRef<HTMLDivElement>(null);
+    const [chatHistory, setChatHistory] = useState([]);
+    const searchContainerRef = useRef(null);
 
-    const handleSearch = async (currentQuery: string) => {
+    const handleSearch = async (currentQuery) => {
         if (!currentQuery.trim()) return;
 
-        const userMessage: Message = { sender: 'user', text: currentQuery };
-        const aiLoadingMessage: Message = { sender: 'ai', text: '', isLoading: true };
+        const userMessage = { sender: 'user', text: currentQuery };
+        const aiLoadingMessage = { sender: 'ai', text: '', isLoading: true };
 
-        const updatedHistory = [...chatHistory, userMessage];
-        setChatHistory([...updatedHistory, aiLoadingMessage]);
+        setChatHistory(prev => [...prev, userMessage, aiLoadingMessage]);
         setShowSuggestions(false);
         setQuery('');
 
@@ -29,29 +28,26 @@ const SearchBar = () => {
             const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    query: currentQuery,
-                    history: updatedHistory.slice(-20) 
-                }),
+                body: JSON.stringify({ query: currentQuery }),
             });
             const data = await res.json();
-            const aiResponseMessage: Message = { sender: 'ai', text: data.response };
+            const aiResponseMessage = { sender: 'ai', text: data.response };
             setChatHistory(prev => [...prev.slice(0, -1), aiResponseMessage]);
         } catch (error) {
-            const aiErrorMessage: Message = { sender: 'ai', text: 'Sorry, something went wrong.' };
+            const aiErrorMessage = { sender: 'ai', text: 'Sorry, something went wrong.' };
             setChatHistory(prev => [...prev.slice(0, -1), aiErrorMessage]);
         }
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (e) => {
         const value = e.target.value;
         setQuery(value);
         setShowSuggestions(value.length > 0 && chatHistory.length === 0);
     };
 
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        const handleClickOutside = (event) => {
+            if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
                 setShowSuggestions(false);
             }
         };

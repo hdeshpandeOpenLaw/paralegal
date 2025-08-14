@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSession, signIn } from "next-auth/react";
 import Image from 'next/image';
+import EventSkeleton from './EventSkeleton';
 
 const WEEK_DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
@@ -228,11 +229,12 @@ const DynamicCalendar = () => {
         })}
       </div>
 
-      <div className="space-y-3 min-h-[100px]">
+      <div className="space-y-3">
         {loading ? (
-          <div className="flex items-center justify-center">
-            <Image src="/loader.gif" alt="Loading..." width={20} height={20} className="mr-2" unoptimized />
-            <span>Loading events...</span>
+          <div>
+            <EventSkeleton />
+            <EventSkeleton />
+            <EventSkeleton />
           </div>
         ) : error ? (
           <p className="text-red-500">{error}</p>
