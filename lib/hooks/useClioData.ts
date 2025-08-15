@@ -12,9 +12,10 @@ import {
   getTaskDetails,
   getTasksTotalCount,
   getAllTasks,
+  getTaskTypes,
 } from '../clio-api';
 
-export const useClioData = (isClioConnected: boolean) => {
+export const useClioData = (isClioConnected: boolean, matterFilter: string = 'All', sortOption: string = 'id(asc)', taskFilter: string = 'All', taskSortOption: string = 'due_at(asc)', taskPriorityFilter: string = 'All', taskTypeFilter: string = '') => {
   const [clioMatters, setClioMatters] = useState<any[]>([]);
   const [loadingClio, setLoadingClio] = useState(false);
   const [clioError, setClioError] = useState<string | null>(null);
@@ -24,6 +25,7 @@ export const useClioData = (isClioConnected: boolean) => {
   const [outstandingBalancesCount, setOutstandingBalancesCount] = useState(0);
   const [tasks, setTasks] = useState<any[]>([]);
   const [allTasks, setAllTasks] = useState<any[]>([]);
+  const [taskTypes, setTaskTypes] = useState<any[]>([]);
   const [selectedMatter, setSelectedMatter] = useState<any>(null);
   const [isMatterModalOpen, setIsMatterModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
@@ -39,26 +41,42 @@ export const useClioData = (isClioConnected: boolean) => {
     if (isClioConnected) {
       const token = localStorage.getItem('clio_access_token');
       if (token) {
-        fetchClioMatters(token, mattersCurrentPage);
-        fetchMattersTotalCount(token);
+        fetchClioMatters(token, mattersCurrentPage, matterFilter, sortOption);
+        fetchMattersTotalCount(token, matterFilter);
         fetchPendingMattersCount(token);
         fetchBillsAwaitingPaymentCount(token);
         fetchClientsDueForFollowup(token);
-        fetchTasks(token, tasksCurrentPage);
+        fetchTasks(token, tasksCurrentPage, taskFilter, taskSortOption, taskPriorityFilter, taskTypeFilter);
         fetchAllTasks(token);
-        fetchTasksTotalCount(token);
+        fetchTasksTotalCount(token, taskFilter);
+        fetchTaskTypes(token);
       } else {
         setClioError("Clio access token not found in local storage.");
       }
     }
-  }, [isClioConnected, mattersCurrentPage, tasksCurrentPage]);
+  }, [isClioConnected, mattersCurrentPage, tasksCurrentPage, matterFilter, sortOption, taskFilter, taskSortOption, taskPriorityFilter, taskTypeFilter]);
 
-  const fetchClioMatters = async (token: string, page: number = 1) => {
+  const fetchTaskTypes = async (token: string) => {
+    try {
+      const result = await getTaskTypes(token);
+      if (result && Array.isArray(result.data)) {
+        setTaskTypes(result.data);
+      } else {
+        console.warn('Received unexpected format for task types:', result);
+        setClioError('Could not retrieve task categories: The data format was unexpected.');
+      }
+    } catch (error: any) {
+      console.error('Could not retrieve task types from Clio:', error.message);
+      setClioError(`Could not retrieve task categories: ${error.message}`);
+    }
+  };
+
+  const fetchClioMatters = async (token: string, page: number = 1, filter: string = 'All', sort: string = 'id(asc)') => {
     setLoadingClio(true);
     setClioError(null);
     const offset = (page - 1) * mattersPerPage;
     try {
-      const matters = await getMatters(token, mattersPerPage, offset);
+      const matters = await getMatters(token, mattersPerPage, offset, filter, sort);
       if (matters && Array.isArray(matters.data)) {
         setClioMatters(matters.data);
       } else {
@@ -73,9 +91,9 @@ export const useClioData = (isClioConnected: boolean) => {
     }
   };
 
-  const fetchMattersTotalCount = async (token: string) => {
+  const fetchMattersTotalCount = async (token: string, filter: string = 'All') => {
     try {
-      const count = await getMattersTotalCount(token);
+      const count = await getMattersTotalCount(token, filter);
       if (typeof count === 'number') {
         setTotalMattersCount(count);
       } else {
@@ -129,12 +147,16 @@ export const useClioData = (isClioConnected: boolean) => {
     }
   };
 
-  const fetchTasks = async (token: string, page: number = 1) => {
+  const fetchTasks = async (token: string, page: number, status: string, order: string, priority: string, taskTypeId: string) => {
     const offset = (page - 1) * tasksPerPage;
     try {
-      const result = await getTasks(token, tasksPerPage, offset);
+      const result = await getTasks(token, tasksPerPage, offset, status, order, taskTypeId);
       if (result && Array.isArray(result.data)) {
-        setTasks(result.data);
+        let filteredTasks = result.data;
+        if (priority !== 'All') {
+          filteredTasks = result.data.filter((task: any) => task.priority.toLowerCase() === priority.toLowerCase());
+        }
+        setTasks(filteredTasks);
       } else {
         console.warn('Received unexpected format for tasks:', result);
       }
@@ -156,9 +178,9 @@ export const useClioData = (isClioConnected: boolean) => {
     }
   };
 
-  const fetchTasksTotalCount = async (token: string) => {
+  const fetchTasksTotalCount = async (token: string, status: string) => {
     try {
-      const count = await getTasksTotalCount(token);
+      const count = await getTasksTotalCount(token, status);
       if (typeof count === 'number') {
         setTotalTasksCount(count);
       } else {
@@ -205,6 +227,7 @@ export const useClioData = (isClioConnected: boolean) => {
     outstandingBalancesCount,
     tasks,
     allTasks,
+    taskTypes,
     selectedMatter,
     isMatterModalOpen,
     selectedTask,

@@ -25,6 +25,12 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
   const emailsPerPage = 5;
 
   const [isClioConnected, setIsClioConnected] = useState(false);
+  const [matterFilter, setMatterFilter] = useState('All');
+  const [sortOption, setSortOption] = useState('id(asc)');
+  const [taskFilter, setTaskFilter] = useState('All');
+  const [taskPriorityFilter, setTaskPriorityFilter] = useState('All');
+  const [taskSortOption, setTaskSortOption] = useState('due_at(asc)');
+  const [taskTypeFilter, setTaskTypeFilter] = useState('');
   const searchParams = useSearchParams();
 
   const {
@@ -37,6 +43,7 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
     outstandingBalancesCount,
     tasks,
     allTasks,
+    taskTypes,
     selectedMatter,
     isMatterModalOpen,
     selectedTask,
@@ -53,7 +60,7 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
     setTasksCurrentPage,
     mattersPerPage,
     tasksPerPage,
-  } = useClioData(isClioConnected);
+  } = useClioData(isClioConnected, matterFilter, sortOption, taskFilter, taskSortOption, taskPriorityFilter, taskTypeFilter);
 
   const {
     emails,
@@ -225,6 +232,15 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
                   tasksPerPage={tasksPerPage}
                   setTasksCurrentPage={setTasksCurrentPage}
                   processTasksForChart={processTasksForChart}
+                  taskFilter={taskFilter}
+                  setTaskFilter={setTaskFilter}
+                  taskPriorityFilter={taskPriorityFilter}
+                  setTaskPriorityFilter={setTaskPriorityFilter}
+                  taskSortOption={taskSortOption}
+                  setTaskSortOption={setTaskSortOption}
+                  taskTypes={taskTypes}
+                  taskTypeFilter={taskTypeFilter}
+                  setTaskTypeFilter={setTaskTypeFilter}
                 />
               )}
 
@@ -240,6 +256,10 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
                   mattersCurrentPage={mattersCurrentPage}
                   mattersPerPage={mattersPerPage}
                   setMattersCurrentPage={setMattersCurrentPage}
+                  matterFilter={matterFilter}
+                  setMatterFilter={setMatterFilter}
+                  sortOption={sortOption}
+                  setSortOption={setSortOption}
                 />
               )}
             </div>

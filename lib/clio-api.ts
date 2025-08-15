@@ -33,12 +33,23 @@ async function request(endpoint: string, accessToken: string, options: RequestIn
 }
 
 // Example function to get matters
-export async function getMatters(accessToken: string, limit: number = 15, offset: number = 0) {
-  return request(`matters?limit=${limit}&offset=${offset}&fields=id,display_number,description,last_activity_date`, accessToken);
+export async function getMatters(accessToken: string, limit: number = 15, offset: number = 0, status: string = 'All', order: string = 'id(asc)') {
+  let endpoint = `matters?limit=${limit}&offset=${offset}&fields=id,display_number,description,last_activity_date`;
+  if (status && status !== 'All') {
+    endpoint += `&status=${status}`;
+  }
+  if (order) {
+    endpoint += `&order=${order}`;
+  }
+  return request(endpoint, accessToken);
 }
 
-export async function getMattersTotalCount(accessToken: string) {
-  const result = await request('matters?limit=1&fields=id', accessToken);
+export async function getMattersTotalCount(accessToken: string, status: string = 'All') {
+  let endpoint = 'matters?limit=1&fields=id';
+  if (status && status !== 'All') {
+    endpoint += `&status=${status}`;
+  }
+  const result = await request(endpoint, accessToken);
   return result.meta.records;
 }
 
@@ -73,17 +84,31 @@ export async function getActivities(accessToken: string, updatedSince: string) {
 }
 
 // Function to get tasks
-export async function getTasks(accessToken: string, limit: number = 6, offset: number = 0) {
-    return request(`tasks?limit=${limit}&offset=${offset}&fields=id,name,created_at,task_type{name}`, accessToken);
+export async function getTasks(accessToken: string, limit: number = 6, offset: number = 0, status: string = 'All', order: string = 'due_at(asc)', taskTypeId: string = '') {
+    let endpoint = `tasks?limit=${limit}&offset=${offset}&fields=id,name,created_at,task_type{name},priority`;
+    if (status && status !== 'All') {
+        endpoint += `&status=${status}`;
+    }
+    if (order && order !== 'Default') {
+        endpoint += `&order=${order}`;
+    }
+    if (taskTypeId) {
+        endpoint += `&task_type_id=${taskTypeId}`;
+    }
+    return request(endpoint, accessToken);
 }
 
 export async function getAllTasks(accessToken: string) {
-  return request(`tasks?fields=id,name,created_at,task_type{name}`, accessToken);
+  return request(`tasks?fields=id,name,created_at,task_type{name},priority`, accessToken);
 }
 
 // Function to get the total count of tasks
-export async function getTasksTotalCount(accessToken: string) {
-    const result = await request('tasks?limit=1&fields=id', accessToken);
+export async function getTasksTotalCount(accessToken: string, status: string = 'All') {
+    let endpoint = 'tasks?limit=1&fields=id';
+    if (status && status !== 'All') {
+        endpoint += `&status=${status}`;
+    }
+    const result = await request(endpoint, accessToken);
     return result.meta.records;
 }
 
@@ -91,6 +116,10 @@ export async function getTasksTotalCount(accessToken: string) {
 export async function getTaskDetails(accessToken: string, taskId: string) {
     const fields = 'id,name,description,due_at,completed_at,status,priority,task_type{name},matter{display_number}';
     return request(`tasks/${taskId}?fields=${fields}`, accessToken);
+}
+
+export async function getTaskTypes(accessToken: string) {
+  return request('task_types?fields=id,name', accessToken);
 }
 
 export async function getClioCalendarEvents(accessToken: string, startDate: string, endDate: string) {
