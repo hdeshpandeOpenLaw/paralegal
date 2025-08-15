@@ -39,6 +39,7 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
   const [taskPriorityFilter, setTaskPriorityFilter] = useState('All');
   const [taskSortOption, setTaskSortOption] = useState('due_at(asc)');
   const [taskTypeFilter, setTaskTypeFilter] = useState('');
+  const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
   const searchParams = useSearchParams();
 
   const {
@@ -57,6 +58,7 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
     pastDueTasksCount,
     negativeBalanceCasesCount,
     replenishmentNeededCount,
+    clioUserId,
     tasks,
     allTasks,
     taskTypes,
@@ -307,7 +309,14 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
           </div>
           {/* Events Calendar */}
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-6">Events calendar</h2>
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-800">Events calendar</h2>
+                <button onClick={() => setIsAddEventModalOpen(true)} className="p-1 hover:bg-gray-100 rounded" aria-label="Add event">
+                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                </button>
+            </div>
             <DynamicCalendar />
           </div>
 
@@ -316,8 +325,114 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
       {selectedEmail && <EmailModal email={selectedEmail} onClose={handleCloseModal} />}
       <MatterModal isOpen={isMatterModalOpen} onClose={() => setIsMatterModalOpen(false)} matter={selectedMatter} />
       <TaskModal isOpen={isTaskModalOpen} onClose={() => setIsTaskModalOpen(false)} task={selectedTask} />
+      <AddEventModal isOpen={isAddEventModalOpen} onClose={() => setIsAddEventModalOpen(false)} clioUserId={clioUserId} />
     </div>
   );
 };
+
+const AddEventModal = ({ isOpen, onClose, clioUserId }: { isOpen: boolean, onClose: () => void, clioUserId: number | null }) => {
+    const [summary, setSummary] = useState('');
+    const [startAt, setStartAt] = useState('');
+    const [endAt, setEndAt] = useState('');
+    const [description, setDescription] = useState('');
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
+  
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError(null);
+      setSuccess(null);
+  
+      const clioToken = localStorage.getItem('clio_access_token');
+      if (!clioToken) {
+        setError('Clio token not found.');
+        return;
+      }
+      if (!clioUserId) {
+        setError('Clio user ID not found. Please wait a moment and try again.');
+        return;
+      }
+  
+      try {
+        const response = await fetch('/api/clio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            endpoint: 'calendar_entries',
+            method: 'POST',
+            accessToken: clioToken,
+            body: {
+              data: {
+                summary,
+                start_at: new Date(startAt).toISOString(),
+                end_at: new Date(endAt).toISOString(),
+                description,
+                calendar_owner: { id: clioUserId }
+              }
+            }
+          }),
+        });
+  
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.details?.error?.message || 'Failed to create event.');
+        }
+  
+        setSuccess('Event created successfully!');
+        setSummary('');
+        setStartAt('');
+        setEndAt('');
+        setDescription('');
+        setTimeout(() => {
+          onClose();
+          setSuccess(null);
+        }, 2000);
+  
+      } catch (err: any) {
+        setError(err.message);
+      }
+    };
+  
+    if (!isOpen) return null;
+  
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+          <div className="p-8">
+            <div className="flex justify-between items-start mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Add New Calendar Event</h2>
+              <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="summary" className="block text-sm font-medium text-gray-700">Summary</label>
+                <input type="text" id="summary" value={summary} onChange={e => setSummary(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+              <div>
+                <label htmlFor="startAt" className="block text-sm font-medium text-gray-700">Start Time</label>
+                <input type="datetime-local" id="startAt" value={startAt} onChange={e => setStartAt(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+              <div>
+                <label htmlFor="endAt" className="block text-sm font-medium text-gray-700">End Time</label>
+                <input type="datetime-local" id="endAt" value={endAt} onChange={e => setEndAt(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+              <div>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} rows={4} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+              </div>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+              {success && <p className="text-green-500 text-sm">{success}</p>}
+              <div className="flex justify-end pt-4">
+                <button type="button" onClick={onClose} className="mr-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">Cancel</button>
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Create Event</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
 export default PersonalDashboard;

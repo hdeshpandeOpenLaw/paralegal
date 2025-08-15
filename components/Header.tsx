@@ -93,19 +93,34 @@ const Header = ({ activeTab = 'personal-dashboard', onTabChange }: HeaderProps) 
               )}
               {showNotifications && (
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-2 z-50">
-                  <div className="px-4 py-2 text-sm text-gray-700 font-bold">Notifications</div>
+                  <div className="px-4 py-2 text-sm text-gray-700 font-bold flex justify-between items-center">
+                    <span>Notifications</span>
+                    {unreadCount > 0 && (
+                      <button 
+                        onClick={() => {
+                          localStorage.setItem('lastVisitTimestamp', new Date().toISOString());
+                          window.location.reload(); // Reload to clear notifications
+                        }}
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        Mark all as read
+                      </button>
+                    )}
+                  </div>
                   <div className="border-t border-gray-200"></div>
                   {loading ? (
                     <div className="px-4 py-3 text-sm text-gray-600">Loading...</div>
-                  ) : (
+                  ) : notifications.length > 0 ? (
                     notifications.map(notification => (
                       <div 
                         key={notification.id} 
-                        className={`px-4 py-3 text-sm ${notification.read ? 'text-gray-400' : 'text-gray-800'}`}
+                        className="px-4 py-3 text-sm text-gray-800 border-b border-gray-100"
                       >
                         {notification.message}
                       </div>
                     ))
+                  ) : (
+                    <div className="px-4 py-3 text-sm text-gray-600">No new notifications.</div>
                   )}
                 </div>
               )}

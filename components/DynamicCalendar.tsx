@@ -278,6 +278,106 @@ const DynamicCalendar = () => {
   );
 };
 
+const AddEventModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
+  const [summary, setSummary] = useState('');
+  const [startAt, setStartAt] = useState('');
+  const [endAt, setEndAt] = useState('');
+  const [description, setDescription] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    const clioToken = localStorage.getItem('clio_access_token');
+    if (!clioToken) {
+      setError('Clio token not found.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/clio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          endpoint: 'calendar_entries',
+          method: 'POST',
+          accessToken: clioToken,
+          body: {
+            data: {
+              summary,
+              start_at: new Date(startAt).toISOString(),
+              end_at: new Date(endAt).toISOString(),
+              description,
+            }
+          }
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details?.error?.message || 'Failed to create event.');
+      }
+
+      setSuccess('Event created successfully!');
+      setSummary('');
+      setStartAt('');
+      setEndAt('');
+      setDescription('');
+      setTimeout(() => {
+        onClose();
+        setSuccess(null);
+      }, 2000);
+
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+        <div className="p-8">
+          <div className="flex justify-between items-start mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Add New Calendar Event</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="summary" className="block text-sm font-medium text-gray-700">Summary</label>
+              <input type="text" id="summary" value={summary} onChange={e => setSummary(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+            </div>
+            <div>
+              <label htmlFor="startAt" className="block text-sm font-medium text-gray-700">Start Time</label>
+              <input type="datetime-local" id="startAt" value={startAt} onChange={e => setStartAt(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+            </div>
+            <div>
+              <label htmlFor="endAt" className="block text-sm font-medium text-gray-700">End Time</label>
+              <input type="datetime-local" id="endAt" value={endAt} onChange={e => setEndAt(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+            </div>
+            <div>
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+              <textarea id="description" value={description} onChange={e => setDescription(e.target.value)} rows={4} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+            </div>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {success && <p className="text-green-500 text-sm">{success}</p>}
+            <div className="flex justify-end pt-4">
+              <button type="button" onClick={onClose} className="mr-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">Cancel</button>
+              <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Create Event</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function getMonday(date: Date) {
   const day = date.getDay();
   const diff = (day === 0 ? -6 : 1) - day;

@@ -62,12 +62,16 @@ const DonutChart = ({ data, total, onLegendItemClick, activeCategory }: { data: 
       </div>
 
       {/* Legend */}
-      <div className="flex flex-col justify-center space-y-2">
-        {categories.map((category, index) => (
-          <div key={category.name} className={`flex items-center space-x-3 cursor-pointer p-1 rounded ${activeCategory === category.name ? 'bg-gray-200' : ''}`} onClick={() => onLegendItemClick(category.name)}>
-            <div className={`w-3 h-3 rounded-full ${category.color}`}></div>
-            <span className="text-sm text-gray-700">{category.name}</span>
-            <span className="text-sm font-medium text-gray-900">{category.count}</span>
+      <div className="flex items-start justify-center space-x-8">
+        {Array.from({ length: Math.ceil(categories.length / 5) }).map((_, colIndex) => (
+          <div key={colIndex} className="flex flex-col justify-start space-y-2">
+            {categories.slice(colIndex * 5, colIndex * 5 + 5).map((category) => (
+              <div key={category.name} className={`flex items-center space-x-3 cursor-pointer p-1 rounded ${activeCategory === category.name ? 'bg-gray-200' : ''}`} onClick={() => onLegendItemClick(category.name)}>
+                <div className={`w-3 h-3 rounded-full ${category.color}`}></div>
+                <span className="text-sm text-gray-700">{category.name}</span>
+                <span className="text-sm font-medium text-gray-900">{category.count}</span>
+              </div>
+            ))}
           </div>
         ))}
       </div>

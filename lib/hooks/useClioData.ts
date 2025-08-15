@@ -21,6 +21,7 @@ import {
   getPastDueTasksCount,
   getNegativeBalanceCasesCount,
   getReplenishmentNeededCount,
+  getCurrentUser,
 } from '../clio-api';
 
 export const useClioData = (isClioConnected: boolean, matterFilter: string = 'All', sortOption: string = 'id(asc)', taskFilter: string = 'All', taskSortOption: string = 'due_at(asc)', taskPriorityFilter: string = 'All', taskTypeFilter: string = '') => {
@@ -39,6 +40,7 @@ export const useClioData = (isClioConnected: boolean, matterFilter: string = 'Al
   const [pastDueTasksCount, setPastDueTasksCount] = useState(0);
   const [negativeBalanceCasesCount, setNegativeBalanceCasesCount] = useState(0);
   const [replenishmentNeededCount, setReplenishmentNeededCount] = useState(0);
+  const [clioUserId, setClioUserId] = useState<number | null>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [allTasks, setAllTasks] = useState<any[]>([]);
   const [taskTypes, setTaskTypes] = useState<any[]>([]);
@@ -70,6 +72,7 @@ export const useClioData = (isClioConnected: boolean, matterFilter: string = 'Al
         fetchPastDueTasksCount(token);
         fetchNegativeBalanceCasesCount(token);
         fetchReplenishmentNeededCount(token);
+        fetchClioCurrentUser(token);
         fetchTasks(token, tasksCurrentPage, taskFilter, taskSortOption, taskPriorityFilter, taskTypeFilter);
         fetchAllTasks(token);
         fetchTasksTotalCount(token, taskFilter);
@@ -275,6 +278,19 @@ export const useClioData = (isClioConnected: boolean, matterFilter: string = 'Al
     }
   };
 
+  const fetchClioCurrentUser = async (token: string) => {
+    try {
+      const user = await getCurrentUser(token);
+      if (user?.data?.id) {
+        setClioUserId(user.data.id);
+      } else {
+        console.warn('Could not retrieve Clio user ID.');
+      }
+    } catch (error: any) {
+      console.error('Could not retrieve Clio user from Clio:', error.message);
+    }
+  };
+
   const fetchTasks = async (token: string, page: number, status: string, order: string, priority: string, taskTypeId: string) => {
     const offset = (page - 1) * tasksPerPage;
     try {
@@ -361,6 +377,7 @@ export const useClioData = (isClioConnected: boolean, matterFilter: string = 'Al
     pastDueTasksCount,
     negativeBalanceCasesCount,
     replenishmentNeededCount,
+    clioUserId,
     tasks,
     allTasks,
     taskTypes,

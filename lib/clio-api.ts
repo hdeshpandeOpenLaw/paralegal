@@ -33,13 +33,16 @@ async function request(endpoint: string, accessToken: string, options: RequestIn
 }
 
 // Example function to get matters
-export async function getMatters(accessToken: string, limit: number = 15, offset: number = 0, status: string = 'All', order: string = 'id(asc)') {
-  let endpoint = `matters?limit=${limit}&offset=${offset}&fields=id,display_number,description,last_activity_date`;
+export async function getMatters(accessToken: string, limit: number = 15, offset: number = 0, status: string = 'All', order: string = 'id(asc)', created_since?: string) {
+  let endpoint = `matters?limit=${limit}&offset=${offset}&fields=id,display_number,description,last_activity_date,created_at`;
   if (status && status !== 'All') {
     endpoint += `&status=${status}`;
   }
   if (order) {
     endpoint += `&order=${order}`;
+  }
+  if (created_since) {
+    endpoint += `&created_since=${created_since}`;
   }
   return request(endpoint, accessToken);
 }
@@ -84,22 +87,50 @@ export async function getActivities(accessToken: string, updatedSince: string) {
 }
 
 // Function to get tasks
-export async function getTasks(accessToken: string, limit: number = 6, offset: number = 0, status: string = 'All', order: string = 'due_at(asc)', taskTypeId: string = '') {
-    let endpoint = `tasks?limit=${limit}&offset=${offset}&fields=id,name,created_at,due_at,status,task_type{name},priority`;
-    if (status && status !== 'All') {
-        endpoint += `&status=${status}`;
-    }
-    if (order && order !== 'Default') {
-        endpoint += `&order=${order}`;
-    }
-    if (taskTypeId) {
-        if (taskTypeId === '__NULL__') {
-            endpoint += `&task_type_id[is_null]=true`;
-        } else {
-            endpoint += `&task_type_id=${taskTypeId}`;
+export async function getTasks(accessToken: string, limit: number = 6, offset: number = 0, status: string = 'All', order: string = 'due_at(asc)', taskTypeId: string = '', created_since?: string) {
+    if (status === 'incomplete') {
+        const statuses = ['pending', 'in_progress', 'in_review'];
+        const promises = statuses.map(s => {
+            let endpoint = `tasks?limit=${limit}&offset=${offset}&fields=id,name,created_at,due_at,status,task_type{name},priority`;
+            endpoint += `&status=${s}`;
+            if (order && order !== 'Default') {
+                endpoint += `&order=${order}`;
+            }
+            if (taskTypeId) {
+                if (taskTypeId === '__NULL__') {
+                    endpoint += `&task_type_id[is_null]=true`;
+                } else {
+                    endpoint += `&task_type_id=${taskTypeId}`;
+                }
+            }
+            if (created_since) {
+                endpoint += `&created_since=${created_since}`;
+            }
+            return request(endpoint, accessToken);
+        });
+        const results = await Promise.all(promises);
+        const combinedData = results.reduce((acc, result) => acc.concat(result.data), []);
+        return { data: combinedData };
+    } else {
+        let endpoint = `tasks?limit=${limit}&offset=${offset}&fields=id,name,created_at,due_at,status,task_type{name},priority`;
+        if (status && status !== 'All') {
+            endpoint += `&status=${status}`;
         }
+        if (order && order !== 'Default') {
+            endpoint += `&order=${order}`;
+        }
+        if (taskTypeId) {
+            if (taskTypeId === '__NULL__') {
+                endpoint += `&task_type_id[is_null]=true`;
+            } else {
+                endpoint += `&task_type_id=${taskTypeId}`;
+            }
+        }
+        if (created_since) {
+            endpoint += `&created_since=${created_since}`;
+        }
+        return request(endpoint, accessToken);
     }
-    return request(endpoint, accessToken);
 }
 
 export async function getAllTasks(accessToken: string) {
@@ -126,9 +157,12 @@ export async function getTaskTypes(accessToken: string) {
   return request('task_types?fields=id,name', accessToken);
 }
 
-export async function getClioCalendarEvents(accessToken: string, startDate: string, endDate: string) {
-  const fields = 'id,start_at,end_at,summary,description,location{name},attendees{name},calendar_entry_event_type{name}';
-  const url = `calendar_entries.json?start_date=${startDate}&end_date=${endDate}&fields=${fields}`;
+export async function getClioCalendarEvents(accessToken: string, created_since?: string) {
+  const fields = 'id,start_at,end_at,summary,description,location{name},attendees{name},calendar_entry_event_type{name},created_at';
+  let url = `calendar_entries?fields=${fields}&order=id(desc)`;
+  if (created_since) {
+    url += `&created_since=${created_since}`;
+  }
   return request(url, accessToken);
 }
 
@@ -211,4 +245,15 @@ export async function getReplenishmentNeededCount(accessToken: string) {
     const endpoint = `billable_matters?amount_in_trust_condition=0&limit=1&fields=id`;
     const result = await request(endpoint, accessToken);
     return result.meta.records;
+}
+
+export async function createCalendarEvent(accessToken: string, eventData: any) {
+    return request('calendar_entries', accessToken, {
+        method: 'POST',
+        body: JSON.stringify({ data: eventData }),
+    });
+}
+
+export async function getCurrentUser(accessToken: string) {
+    return request('users/who_am_i', accessToken);
 }
