@@ -12,6 +12,14 @@ import { useEmails } from '../lib/hooks/useEmails';
 import EmailTabContent from './EmailTabContent';
 import TaskTabContent from './TaskTabContent';
 import MatterTabContent from './MatterTabContent';
+import UntouchedCasesKPICard from './UntouchedCasesKPICard';
+import InactiveMattersKPICard from './InactiveMattersKPICard';
+import InactiveClientsKPICard from './InactiveClientsKPICard';
+import DocketsToReviewKPICard from './DocketsToReviewKPICard';
+import OutstandingTasksKPICard from './OutstandingTasksKPICard';
+import PastDueTasksKPICard from './PastDueTasksKPICard';
+import NegativeBalanceCasesKPICard from './NegativeBalanceCasesKPICard';
+import ReplenishmentNeededKPICard from './ReplenishmentNeededKPICard';
 
 interface PersonalDashboardProps {
   onTabChange?: (tab: 'ai-assistant' | 'personal-dashboard') => void;
@@ -19,7 +27,7 @@ interface PersonalDashboardProps {
 
 const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
   const { data: session } = useSession();
-  const [activeTab, setActiveTab] = useState<'emails' | 'tasks' | 'matters'>('emails');
+  const [activeTab, setActiveTab] = useState<'insights' | 'emails' | 'tasks' | 'matters'>('insights');
   const [greeting, setGreeting] = useState('Morning');
   const [currentPage, setCurrentPage] = useState(1);
   const emailsPerPage = 5;
@@ -41,6 +49,14 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
     billsAwaitingPaymentCount,
     clientsDueForFollowupCount,
     outstandingBalancesCount,
+    untouchedCasesCount,
+    inactiveMattersCount,
+    inactiveClientsCount,
+    docketsToReviewCount,
+    outstandingTasksCount,
+    pastDueTasksCount,
+    negativeBalanceCasesCount,
+    replenishmentNeededCount,
     tasks,
     allTasks,
     taskTypes,
@@ -161,6 +177,14 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
           <KPICard title="Matters with pending balance" value={billsAwaitingPaymentCount.toString()} color="orange" />
           <KPICard title="Clients due for followup" value={clientsDueForFollowupCount.toString()} color="green" />
           <KPICard title="Outstanding Balances" value={outstandingBalancesCount.toString()} color="red" />
+          <UntouchedCasesKPICard count={untouchedCasesCount} />
+          <InactiveMattersKPICard count={inactiveMattersCount} />
+          <InactiveClientsKPICard count={inactiveClientsCount} />
+          <DocketsToReviewKPICard count={docketsToReviewCount} />
+          <OutstandingTasksKPICard count={outstandingTasksCount} />
+          <PastDueTasksKPICard count={pastDueTasksCount} />
+          <NegativeBalanceCasesKPICard count={negativeBalanceCasesCount} />
+          <ReplenishmentNeededKPICard count={replenishmentNeededCount} />
         </div>
 
         {/* Main Content Grid */}
@@ -171,6 +195,16 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-800">Overview</h2>
                 <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setActiveTab('insights')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      activeTab === 'insights'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    Insights
+                  </button>
                   <button
                     onClick={() => setActiveTab('emails')}
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -203,6 +237,13 @@ const PersonalDashboard = ({ onTabChange }: PersonalDashboardProps) => {
                   </button>
                 </div>
               </div>
+
+              {activeTab === 'insights' && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Insights</h3>
+                  <p className="text-gray-600">This is where the insights will be displayed.</p>
+                </div>
+              )}
 
               {activeTab === 'emails' && (
                 <EmailTabContent

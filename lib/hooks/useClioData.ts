@@ -13,6 +13,14 @@ import {
   getTasksTotalCount,
   getAllTasks,
   getTaskTypes,
+  getUntouchedCasesCount,
+  getInactiveMattersCount,
+  getInactiveClientsCount,
+  getDocketsToReviewCount,
+  getOutstandingTasksCount,
+  getPastDueTasksCount,
+  getNegativeBalanceCasesCount,
+  getReplenishmentNeededCount,
 } from '../clio-api';
 
 export const useClioData = (isClioConnected: boolean, matterFilter: string = 'All', sortOption: string = 'id(asc)', taskFilter: string = 'All', taskSortOption: string = 'due_at(asc)', taskPriorityFilter: string = 'All', taskTypeFilter: string = '') => {
@@ -23,6 +31,14 @@ export const useClioData = (isClioConnected: boolean, matterFilter: string = 'Al
   const [billsAwaitingPaymentCount, setBillsAwaitingPaymentCount] = useState(0);
   const [clientsDueForFollowupCount, setClientsDueForFollowupCount] = useState(0);
   const [outstandingBalancesCount, setOutstandingBalancesCount] = useState(0);
+  const [untouchedCasesCount, setUntouchedCasesCount] = useState(0);
+  const [inactiveMattersCount, setInactiveMattersCount] = useState(0);
+  const [inactiveClientsCount, setInactiveClientsCount] = useState(0);
+  const [docketsToReviewCount, setDocketsToReviewCount] = useState(0);
+  const [outstandingTasksCount, setOutstandingTasksCount] = useState(0);
+  const [pastDueTasksCount, setPastDueTasksCount] = useState(0);
+  const [negativeBalanceCasesCount, setNegativeBalanceCasesCount] = useState(0);
+  const [replenishmentNeededCount, setReplenishmentNeededCount] = useState(0);
   const [tasks, setTasks] = useState<any[]>([]);
   const [allTasks, setAllTasks] = useState<any[]>([]);
   const [taskTypes, setTaskTypes] = useState<any[]>([]);
@@ -46,6 +62,14 @@ export const useClioData = (isClioConnected: boolean, matterFilter: string = 'Al
         fetchPendingMattersCount(token);
         fetchBillsAwaitingPaymentCount(token);
         fetchClientsDueForFollowup(token);
+        fetchUntouchedCasesCount(token);
+        fetchInactiveMattersCount(token);
+        fetchInactiveClientsCount(token);
+        fetchDocketsToReviewCount(token);
+        fetchOutstandingTasksCount(token);
+        fetchPastDueTasksCount(token);
+        fetchNegativeBalanceCasesCount(token);
+        fetchReplenishmentNeededCount(token);
         fetchTasks(token, tasksCurrentPage, taskFilter, taskSortOption, taskPriorityFilter, taskTypeFilter);
         fetchAllTasks(token);
         fetchTasksTotalCount(token, taskFilter);
@@ -147,6 +171,110 @@ export const useClioData = (isClioConnected: boolean, matterFilter: string = 'Al
     }
   };
 
+  const fetchUntouchedCasesCount = async (token: string) => {
+    try {
+      const count = await getUntouchedCasesCount(token);
+      if (typeof count === 'number') {
+        setUntouchedCasesCount(count);
+      } else {
+        console.warn('Received unexpected format for untouched cases count:', count);
+      }
+    } catch (error: any) {
+      console.error('Could not retrieve untouched cases count from Clio:', error.message);
+    }
+  };
+
+  const fetchInactiveMattersCount = async (token: string) => {
+    try {
+      const count = await getInactiveMattersCount(token);
+      if (typeof count === 'number') {
+        setInactiveMattersCount(count);
+      } else {
+        console.warn('Received unexpected format for inactive matters count:', count);
+      }
+    } catch (error: any) {
+      console.error('Could not retrieve inactive matters count from Clio:', error.message);
+    }
+  };
+
+  const fetchInactiveClientsCount = async (token: string) => {
+    try {
+      const count = await getInactiveClientsCount(token);
+      if (typeof count === 'number') {
+        setInactiveClientsCount(count);
+      } else {
+        console.warn('Received unexpected format for inactive clients count:', count);
+      }
+    } catch (error: any) {
+      console.error('Could not retrieve inactive clients count from Clio:', error.message);
+    }
+  };
+
+  const fetchDocketsToReviewCount = async (token: string) => {
+    try {
+      const count = await getDocketsToReviewCount(token);
+      if (typeof count === 'number') {
+        setDocketsToReviewCount(count);
+      } else {
+        console.warn('Received unexpected format for dockets to review count:', count);
+      }
+    } catch (error: any) {
+      console.error('Could not retrieve dockets to review count from Clio:', error.message);
+    }
+  };
+
+  const fetchOutstandingTasksCount = async (token: string) => {
+    try {
+      const count = await getOutstandingTasksCount(token);
+      if (typeof count === 'number') {
+        setOutstandingTasksCount(count);
+      } else {
+        console.warn('Received unexpected format for outstanding tasks count:', count);
+      }
+    } catch (error: any) {
+      console.error('Could not retrieve outstanding tasks count from Clio:', error.message);
+    }
+  };
+
+  const fetchPastDueTasksCount = async (token: string) => {
+    try {
+      const count = await getPastDueTasksCount(token);
+      if (typeof count === 'number') {
+        setPastDueTasksCount(count);
+      } else {
+        console.warn('Received unexpected format for past due tasks count:', count);
+      }
+    } catch (error: any) {
+      console.error('Could not retrieve past due tasks count from Clio:', error.message);
+    }
+  };
+
+  const fetchNegativeBalanceCasesCount = async (token: string) => {
+    try {
+      const count = await getNegativeBalanceCasesCount(token);
+      if (typeof count === 'number') {
+        setNegativeBalanceCasesCount(count);
+      } else {
+        console.warn('Received unexpected format for negative balance cases count:', count);
+      }
+    } catch (error: any) {
+      console.error('Could not retrieve negative balance cases count from Clio:', error.message);
+    }
+  };
+
+  const fetchReplenishmentNeededCount = async (token: string) => {
+    try {
+      const count = await getReplenishmentNeededCount(token);
+      if (typeof count === 'number') {
+        setReplenishmentNeededCount(count);
+      } else {
+        console.warn('Received unexpected format for replenishment needed count:', count);
+      }
+    } catch (error: any) {
+      console.error('Could not retrieve replenishment needed count from Clio:', error.message);
+    }
+  };
+
   const fetchTasks = async (token: string, page: number, status: string, order: string, priority: string, taskTypeId: string) => {
     const offset = (page - 1) * tasksPerPage;
     try {
@@ -225,6 +353,14 @@ export const useClioData = (isClioConnected: boolean, matterFilter: string = 'Al
     billsAwaitingPaymentCount,
     clientsDueForFollowupCount,
     outstandingBalancesCount,
+    untouchedCasesCount,
+    inactiveMattersCount,
+    inactiveClientsCount,
+    docketsToReviewCount,
+    outstandingTasksCount,
+    pastDueTasksCount,
+    negativeBalanceCasesCount,
+    replenishmentNeededCount,
     tasks,
     allTasks,
     taskTypes,

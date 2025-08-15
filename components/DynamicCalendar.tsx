@@ -242,19 +242,30 @@ const DynamicCalendar = () => {
           eventsForSelectedDate.map((event, idx) => (
             <div key={idx} onClick={() => handleEventClick(event)} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-2 rounded-md">
               <div className={`w-2 h-2 ${!viewedEvents.includes(event.id) ? 'bg-blue-500' : 'bg-transparent'} rounded-full`}></div>
-              <span className="text-xs text-gray-600">{event.time ? new Date(event.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'All day'}</span>
-              <span className="text-xs text-gray-800">{event.title}</span>
-              {event.type && (
-                <span className="inline-flex items-center text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                  {event.type === 'Task' ? (
-                    <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  ) : (
-                    <svg className="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+              <div className="w-4 h-4">
+                {event.type === 'Task' && (
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                )}
+                {event.type === 'Meeting' && (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                )}
+                {event.type === 'Court' && (
+                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h6m-6 4h6m-6 4h6"></path></svg>
+                )}
+                {event.type !== 'Task' && event.type !== 'Meeting' && event.type !== 'Court' && (
+                    <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                     </svg>
-                  )}
-                  <span className="ml-1.5">{event.type}</span>
-                </span>
+                )}
+              </div>
+              <span className="text-sm text-gray-600">{event.time ? new Date(event.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'All day'}</span>
+              <span className="text-sm text-gray-800">{event.title}</span>
+              {event.hangoutLink && (
+                <a href={event.hangoutLink} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                </a>
               )}
             </div>
           ))

@@ -151,9 +151,24 @@ const TaskTabContent: React.FC<TaskTabContentProps> = ({
     setShowSortPrioritySubMenu(submenu === 'priority' ? !showSortPrioritySubMenu : false);
   };
 
+  const handleLegendItemClick = (categoryName: string) => {
+    const taskType = taskTypes.find(t => t.name === categoryName);
+    const categoryId = categoryName === 'No Category' ? '__NULL__' : taskType?.id;
+
+    if (taskTypeFilter === categoryId) {
+      setTaskTypeFilter('');
+    } else {
+      setTaskTypeFilter(categoryId || '');
+    }
+  };
+
+  const activeCategoryName = taskTypeFilter === '__NULL__' 
+    ? 'No Category' 
+    : taskTypes.find(t => t.id === taskTypeFilter)?.name || null;
+
   return (
     <div>
-      <DonutChart data={processTasksForChart(allTasks)} total={totalTasksCount} />
+      <DonutChart data={processTasksForChart(allTasks)} total={totalTasksCount} onLegendItemClick={handleLegendItemClick} activeCategory={activeCategoryName} />
 
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4">
@@ -174,7 +189,7 @@ const TaskTabContent: React.FC<TaskTabContentProps> = ({
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
+                    strokeWidth="2"
                     d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V19l-4 2v-5.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
                   />
                 </svg>
@@ -255,7 +270,7 @@ const TaskTabContent: React.FC<TaskTabContentProps> = ({
                 className="p-2 rounded-full hover:bg-gray-200"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M3 8h12M3 12h8" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4h18M3 8h12M3 12h8" />
                 </svg>
               </button>
               {showSortMenu && (
@@ -312,7 +327,7 @@ const TaskTabContent: React.FC<TaskTabContentProps> = ({
                 <th className="text-left py-3 px-4 font-medium text-gray-700">Task name</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-700">Category</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-700">Priority</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Date created</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-700">Due date</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-700"></th>
               </tr>
             </thead>
@@ -354,8 +369,8 @@ const TaskTabContent: React.FC<TaskTabContentProps> = ({
                         {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-600">
-                      {new Date(task.created_at).toLocaleDateString()}
+                    <td className={`py-3 px-4 text-sm ${new Date(task.due_at) < new Date() && task.status !== 'complete' ? 'text-red-600' : 'text-gray-600'}`}>
+                      {task.due_at ? new Date(task.due_at).toLocaleDateString() : 'No due date'}
                     </td>
                     <td className="py-3 px-4">
                       <button className="text-gray-400 hover:text-gray-600">
@@ -383,7 +398,7 @@ const TaskTabContent: React.FC<TaskTabContentProps> = ({
               className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <button
@@ -392,7 +407,7 @@ const TaskTabContent: React.FC<TaskTabContentProps> = ({
               className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
               </svg>
             </button>
           </div>

@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-const DonutChart = ({ data, total }: { data: { name: string, count: number, color: string }[], total: number }) => {
+const DonutChart = ({ data, total, onLegendItemClick, activeCategory }: { data: { name: string, count: number, color: string }[], total: number, onLegendItemClick: (name: string) => void, activeCategory: string | null }) => {
   const categories = data;
   const totalTasks = total;
   const circumference = 2 * Math.PI * 14; // 2 * pi * r
@@ -21,10 +21,10 @@ const DonutChart = ({ data, total }: { data: { name: string, count: number, colo
   let offset = 0;
 
   return (
-    <div className="flex items-center space-x-8">
+    <div className="flex items-stretch space-x-8">
       {/* Donut Chart */}
-      <div className="relative w-32 h-32">
-        <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 32 32">
+      <div className="relative w-32 flex-shrink-0">
+        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 32 32">
           <circle
             cx="16"
             cy="16"
@@ -62,9 +62,9 @@ const DonutChart = ({ data, total }: { data: { name: string, count: number, colo
       </div>
 
       {/* Legend */}
-      <div className="space-y-2">
+      <div className="flex flex-col justify-center space-y-2">
         {categories.map((category, index) => (
-          <div key={category.name} className="flex items-center space-x-3">
+          <div key={category.name} className={`flex items-center space-x-3 cursor-pointer p-1 rounded ${activeCategory === category.name ? 'bg-gray-200' : ''}`} onClick={() => onLegendItemClick(category.name)}>
             <div className={`w-3 h-3 rounded-full ${category.color}`}></div>
             <span className="text-sm text-gray-700">{category.name}</span>
             <span className="text-sm font-medium text-gray-900">{category.count}</span>

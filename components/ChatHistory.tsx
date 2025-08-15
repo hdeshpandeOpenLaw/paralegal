@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import Image from 'next/image';
 
 export interface Message {
   sender: 'user' | 'ai';
@@ -56,8 +57,8 @@ const ChatHistory = ({ messages, onClose }: ChatHistoryProps) => {
           </svg>
         </button>
         <div className="flex items-center px-3">
-          <span className="text-lg font-bold text-gray-800 mr-2">AI</span>
-          <img src="/ol-logo.svg" alt="Logo" className="h-6" />
+          <Image src="/ol-logo.svg" alt="Logo" width={90} height={19} />
+          <span className="text-lg font-bold text-gray-800 ml-2">AI</span>
         </div>
       </div>
       
@@ -71,7 +72,7 @@ const ChatHistory = ({ messages, onClose }: ChatHistoryProps) => {
               >
                 {message.isLoading ? (
                   <div className="flex items-center">
-                    <img src="/loader.gif" alt="Loading..." className="w-5 h-5 mr-2" />
+                    <Image src="/loader.gif" alt="Loading..." width={20} height={20} className="mr-2" />
                     <span>Thinking...</span>
                   </div>
                 ) : (

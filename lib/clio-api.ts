@@ -85,7 +85,7 @@ export async function getActivities(accessToken: string, updatedSince: string) {
 
 // Function to get tasks
 export async function getTasks(accessToken: string, limit: number = 6, offset: number = 0, status: string = 'All', order: string = 'due_at(asc)', taskTypeId: string = '') {
-    let endpoint = `tasks?limit=${limit}&offset=${offset}&fields=id,name,created_at,task_type{name},priority`;
+    let endpoint = `tasks?limit=${limit}&offset=${offset}&fields=id,name,created_at,due_at,status,task_type{name},priority`;
     if (status && status !== 'All') {
         endpoint += `&status=${status}`;
     }
@@ -93,13 +93,17 @@ export async function getTasks(accessToken: string, limit: number = 6, offset: n
         endpoint += `&order=${order}`;
     }
     if (taskTypeId) {
-        endpoint += `&task_type_id=${taskTypeId}`;
+        if (taskTypeId === '__NULL__') {
+            endpoint += `&task_type_id[is_null]=true`;
+        } else {
+            endpoint += `&task_type_id=${taskTypeId}`;
+        }
     }
     return request(endpoint, accessToken);
 }
 
 export async function getAllTasks(accessToken: string) {
-  return request(`tasks?fields=id,name,created_at,task_type{name},priority`, accessToken);
+  return request(`tasks?fields=id,name,created_at,due_at,status,task_type{name},priority`, accessToken);
 }
 
 // Function to get the total count of tasks
@@ -139,4 +143,72 @@ export async function createContact(accessToken: string, contactData: any) {
         method: 'POST',
         body: JSON.stringify({ data: contactData }),
     });
+}
+
+export async function getUntouchedCasesCount(accessToken: string) {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const endpoint = `matters?updated_until=${thirtyDaysAgo.toISOString()}&limit=1&fields=id`;
+    const result = await request(endpoint, accessToken);
+    return result.meta.records;
+}
+
+export async function getInactiveMattersCount(accessToken: string) {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const endpoint = `matters?last_activity_until=${thirtyDaysAgo.toISOString()}&limit=1&fields=id`;
+    const result = await request(endpoint, accessToken);
+    return result.meta.records;
+}
+
+export async function getInactiveClientsCount(accessToken: string) {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const endpoint = `communications?updated_until=${thirtyDaysAgo.toISOString()}&limit=1&fields=id`;
+    const result = await request(endpoint, accessToken);
+    return result.meta.records;
+}
+
+export async function getDocketsToReviewCount(accessToken: string) {
+    const today = new Date().toISOString().split('T')[0];
+    const endpoint = `calendar_entries?start_date=${today}&limit=1&fields=id`;
+    const result = await request(endpoint, accessToken);
+    return result.meta.records;
+}
+
+export async function getOutstandingTasksCount(accessToken: string) {
+    const endpoint = `tasks?status=in_progress&limit=1&fields=id`;
+    const result = await request(endpoint, accessToken);
+    return result.meta.records;
+}
+
+export async function getPastDueTasksCount(accessToken: string) {
+    const today = new Date().toISOString();
+    const statuses = ['pending', 'in_progress', 'in_review'];
+    let total = 0;
+    for (const status of statuses) {
+        try {
+            const endpoint = `tasks?due_until=${today}&status=${status}&limit=1&fields=id`;
+            const result = await request(endpoint, accessToken);
+            if (result?.meta?.records) {
+                total += result.meta.records;
+            }
+        } catch (error) {
+            console.error(`Failed to fetch past due tasks for status ${status}:`, error);
+        }
+    }
+    return total;
+}
+
+export async function getNegativeBalanceCasesCount(accessToken: string) {
+    const endpoint = `bills?balance_condition=less_than_0&limit=1&fields=id`;
+    const result = await request(endpoint, accessToken);
+    return result.meta.records;
+}
+
+export async function getReplenishmentNeededCount(accessToken: string) {
+    // This is a simplified check. We're counting matters with a trust balance of exactly 0.
+    const endpoint = `billable_matters?amount_in_trust_condition=0&limit=1&fields=id`;
+    const result = await request(endpoint, accessToken);
+    return result.meta.records;
 }
